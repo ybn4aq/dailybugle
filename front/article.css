@@ -1,0 +1,30 @@
+body {
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+#headline {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+#article-text {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+#ad {
+  width: 100%;
+  height: auto;
+  background-color: #ddd;
+}
+.comments-container,
+.add-comment-container {
+  margin-top: 20px;
+}
+.comments-container {
+  padding: 15px;
+  background-color: #f1f1f1;
+  border-radius: 8px;
+}
+.btn-nav {
+  width: 100%;
+}

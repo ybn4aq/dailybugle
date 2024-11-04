@@ -1,0 +1,25 @@
+body {
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+#headline {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+#article-text {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+#ad {
+  width: 100%;
+  height: auto;
+  background-color: #ddd;
+  margin-top: 20px;
+}
+.teaser-container {
+  background-color: #f1f1f1;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
