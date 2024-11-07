@@ -40,7 +40,7 @@ exports.updateArticle = async (req, res) => {
     res.status(200).json({ message: "Article updated successfully" });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error"});
   }
 };
 
