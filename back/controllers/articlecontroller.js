@@ -9,7 +9,7 @@ exports.getArticles = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
+//hi
 exports.getArticleById = async (req, res) => {
   try {
     const article = await getArticleById(req.params.id);
