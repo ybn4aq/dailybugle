@@ -112,13 +112,13 @@ async function fetchArticles(role) {
     articlesContainer.innerHTML = articles
       .map((article) => {
         // Create HTML for each article
-        const editButton = role === 'editor' ? `<button class="btn btn-warning btn-sm" onclick="editArticle(${article.id})">Edit</button>` : '';
+        const editButton = role === 'editor' ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>` : '';
 
         return `
-          <div class="card mb-3" id="article-${article.id}">
+          <div class="card mb-3" id="article-${article._id}">
             <div class="card-body">
-              <h5 class="card-title" id="title-${article.id}">${article.title}</h5>
-              <p class="card-text" id="content-${article.id}">${article.content}</p>
+              <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+              <p class="card-text" id="content-${article._id}">${article.content}</p>
               ${editButton}
             </div>
           </div>
@@ -134,8 +134,7 @@ function checkLogIn() {
   const user = JSON.parse(localStorage.getItem("user"));
   if (user) {
     userLoggedIn(user.username);
-    console.log(user.username);
-    displayUserInfo(user.name);
+    displayUserInfo(user.username);
     handleViewRole(user.role);
   }
   else {
@@ -178,5 +177,82 @@ async function getIpAddress() {
   } catch (error) {
     console.error("Error fetching IP address:", error);
     return "Unknown IP";
+  }
+}
+
+function editArticle(articleId) {
+  const articleElement = document.getElementById(`article-${articleId}`);
+  const articleTitle = articleElement.querySelector(".card-title").textContent;
+  const articleContent = articleElement.querySelector(".card-text").textContent;
+
+  // Create a modal or form to edit the article
+  const editFormHTML = `
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editModalLabel">Edit Article</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="edit-article-form">
+              <div class="mb-3">
+                <label for="edit-title" class="form-label">Title:</label>
+                <input type="text" id="edit-title" class="form-control" value="${articleTitle}" required />
+              </div>
+              <div class="mb-3">
+                <label for="edit-content" class="form-label">Content:</label>
+                <textarea id="edit-content" class="form-control" required>${articleContent}</textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Append the form to the body and show the modal
+  document.body.insertAdjacentHTML("beforeend", editFormHTML);
+  const editModal = new bootstrap.Modal(document.getElementById("editModal"));
+  editModal.show();
+
+  // Handle the form submission
+  document.getElementById("edit-article-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const newTitle = document.getElementById("edit-title").value;
+    const newContent = document.getElementById("edit-content").value;
+
+    // Save the updated article (send it to your backend or update locally)
+    await saveArticleChanges(articleId, newTitle, newContent);
+
+    // Close the modal after saving
+    editModal.hide();
+  });
+}
+
+async function saveArticleChanges(articleId, newTitle, newContent) {
+  try {
+    const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
+      method: "PUT", // Use PUT to update the article
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: newTitle,
+        content: newContent,
+      }),
+    });
+
+    if (response.ok) {
+      alert("Article updated successfully!");
+      // Reload articles after updating
+      fetchArticles();
+    } else {
+      alert("Failed to update article.");
+    }
+  } catch (error) {
+    console.error("Error updating article:", error);
   }
 }
