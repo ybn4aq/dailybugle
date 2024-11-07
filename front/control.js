@@ -1,67 +1,10 @@
-// let loginButton = document.getElementById("login-button");
-// loginButton.addEventListener("click", async () => {
-//   const username = document.getElementById("username").value;
-//   const password = document.getElementById("password").value;
-//   await logIn(username, password);
-// });
-
-// async function checkLogin() {
-//   let loggedIn = localStorage.getItem("loggedIn");
-//   if (!loggedIn) {
-//     let ip = await getIpAddress();
-//     return {
-//       userid: 0,
-//       username: "",
-//       password: "",
-//       role: "anon",
-//       osBrowser: navigator.userAgent,
-//       ip: ip,
-//     };
-//   } else {
-//     return JSON.parse(localStorage.getItem("user"));
-//   }
-// }
-
-// async function getIpAddress() {
-//   return fetch("https://api.ipify.org?format=json")
-//     .then((response) => response.json())
-//     .then((data) => data.ip)
-//     .catch((error) => {
-//       console.error("Error fetching IP address:", error);
-//       return "Unknown IP";
-//     });
-// }
-
-// async function logIn(username, password) {
-//   let response = await fetch("http://localhost:3002/login", {
-//     method: "GET",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({ username: username, password: password }),
-//   });
-
-//   if (!response.ok) {
-//     console.error("Login failed:", response.statusText);
-//     return { error: 1 };
-//   }
-
-//   const data = await response.json();
-//   if (data) {
-//     console.log("Login successful:", data);
-//     localStorage.setItem("loggedIn", true);
-//     localStorage.setItem("user", JSON.stringify(data));
-//   } else {
-//     console.error("Login response error.");
-//     return { error: 1 };
-//   }
-// }
-
-
 document.addEventListener("DOMContentLoaded", () => {
-  checkLoginStatus();
+  checkLogIn();
 
   const loginForm = document.getElementById("login-form");
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
@@ -76,9 +19,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Login successful");
+        const ip = await getIpAddress();
+        const user = {
+          username: data.username,
+          password: data.password,
+          role: data.role,
+          ip: ip,
+          info: navigator.userAgent,
+        };
+        localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("loggedIn", true);
-        localStorage.setItem("user", JSON.stringify(data));
+        console.log("Stored user:", localStorage.getItem("user"));
+        userLoggedIn(data.username);
         displayUserInfo(data.username);
         handleViewRole(data.role);
       } else {
@@ -89,18 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-
-function checkLoginStatus() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (user) {
-    displayUserInfo(user.name);
-    handleViewRole(user.role);
-  }
-  else {
-    //Display one article with teasers and ad
-    displayDefaultArticle();
-  }
-}
 
 function displayDefaultArticle() {
   const articlesContainer = document.getElementById("articles");
@@ -187,5 +127,56 @@ async function fetchArticles(role) {
       .join("");
   } catch (error) {
     console.error("Error fetching articles:", error);
+  }
+}
+
+function checkLogIn() {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user) {
+    userLoggedIn(user.username);
+    console.log(user.username);
+    displayUserInfo(user.name);
+    handleViewRole(user.role);
+  }
+  else {
+    //Display one article with teasers and ad
+    displayDefaultArticle();
+  }
+}
+
+function checkLoginStatus() {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user) {
+    displayUserInfo(user.name);
+    handleViewRole(user.role);
+  }
+  else {
+    //Display one article with teasers and ad
+    displayDefaultArticle();
+  }
+}
+
+function userLoggedIn(username) {
+  const loginButton = document.getElementById("login-button");
+  const loginModal = bootstrap.Modal.getInstance(document.getElementById("loginModal"));
+  
+  if (loginModal) {
+    loginModal.hide();
+  }
+
+  loginButton.disabled = true;
+  loginButton.textContent = `Welcome, ${username}`;
+  loginButton.classList.remove("btn-outline-secondary");
+  loginButton.classList.add("btn-success");
+}
+
+async function getIpAddress() {
+  try {
+    const response = await fetch("https://api.ipify.org?format=json");
+    const data = await response.json();
+    return data.ip;
+  } catch (error) {
+    console.error("Error fetching IP address:", error);
+    return "Unknown IP";
   }
 }
