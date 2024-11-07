@@ -164,7 +164,7 @@ function checkLogIn() {
   if (user) {
     userLoggedIn(user.username);
     console.log(user.username);
-    displayUserInfo(user.name);
+    displayUserInfo(user.username);
     handleViewRole(user.role);
   } else {
     //Display one article with teasers and ad
