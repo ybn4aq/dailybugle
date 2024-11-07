@@ -110,16 +110,9 @@ function handleViewRole(role) {
 
     // Ensure editor controls are appended only once
     editorcontrols.innerHTML = `
-      <button class="btn btn-primary" id="create-article-btn">Create New Article</button>
+      <button id="create-article-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createArticleModal">Create Article</button>
       <p>You have editor access.</p>
     `;
-
-    // Add functionality to the "Create New Article" button
-    const createButton = document.getElementById("create-article-btn");
-    createButton.addEventListener("click", () => {
-      //test
-      initiateNewArticle();
-    });
   }
 }
 
@@ -140,14 +133,14 @@ async function fetchArticles(role) {
         // Create HTML for each article
         const editButton =
           role === "editor"
-            ? `<button class="btn btn-warning btn-sm" onclick="editArticle(${article.id})">Edit</button>`
+            ? `<button class="btn btn-warning btn-sm" onclick="editArticle(${article._id})">Edit</button>`
             : "";
 
         return `
-          <div class="card mb-3" id="article-${article.id}">
+          <div class="card mb-3" id="article-${article._id}">
             <div class="card-body">
-              <h5 class="card-title" id="title-${article.id}">${article.title}</h5>
-              <p class="card-text" id="content-${article.id}">${article.content}</p>
+              <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+              <p class="card-text" id="content-${article._id}">${article.body}</p>
               ${editButton}
             </div>
           </div>
@@ -209,5 +202,3 @@ async function getIpAddress() {
     return "Unknown IP";
   }
 }
-
-function initiateNewArticle() {}
