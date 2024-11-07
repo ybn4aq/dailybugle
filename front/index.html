@@ -136,16 +136,24 @@
   </head>
   <body>
     <header class="container text-center py-3 border-bottom">
-      <h1>Daily Bugle</h1>
-      <button id="login-button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#loginModal">
-        Login
-      </button>
+      <div class="row align-items-center">
+        <div class="col">
+          <h1>Daily Bugle</h1>
+        </div>
+        <div id="login-container" class="col text-end">
+          <button id="login-button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#loginModal">
+            Login
+          </button>
+          <span id="user-info" class="d-none">Welcome, <span id="username-display"></span>! <button class="btn btn-link" onclick="logout()">Logout</button></span>
+        </div>
+      </div>
     </header>
 
     <main class="container mt-4" id="article-container">
       <div class="row">
         <div class="col text-center">
           <h2>Articles</h2>
+          <div id="editorcontrols"></div>
           <div id="articles"></div>
         </div>
       </div>
