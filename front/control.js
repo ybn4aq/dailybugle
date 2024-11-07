@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   checkLogIn();
-
+  const createArticleForm = document.getElementById("create-article-form");
   const loginForm = document.getElementById("login-form");
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -38,6 +38,32 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Error:", error);
+    }
+  });
+
+  createArticleForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("article-title").value;
+    const body = document.getElementById("article-body").value;
+    const teaser = document.getElementById("article-teaser").value;
+    const categories = document.getElementById("article-categories").value;
+    try {
+      const response = await fetch("http://localhost:3002/articles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, body, teaser, categories }),
+      });
+      if (response.ok) {
+        alert("Article successfully created!");
+        createArticleForm.reset();
+        const createArticleModal = bootstrap.Modal.getInstance(
+          document.getElementById("createArticleModal")
+        );
+        createArticleModal.hide();
+        fetchArticles();
+      }
+    } catch (error) {
+      console.error(error);
     }
   });
 });
@@ -92,7 +118,7 @@ function handleViewRole(role) {
     const createButton = document.getElementById("create-article-btn");
     createButton.addEventListener("click", () => {
       //test
-      alert("Create New Article button clicked!");
+      initiateNewArticle();
     });
   }
 }
@@ -112,7 +138,10 @@ async function fetchArticles(role) {
     articlesContainer.innerHTML = articles
       .map((article) => {
         // Create HTML for each article
-        const editButton = role === 'editor' ? `<button class="btn btn-warning btn-sm" onclick="editArticle(${article.id})">Edit</button>` : '';
+        const editButton =
+          role === "editor"
+            ? `<button class="btn btn-warning btn-sm" onclick="editArticle(${article.id})">Edit</button>`
+            : "";
 
         return `
           <div class="card mb-3" id="article-${article.id}">
@@ -137,8 +166,7 @@ function checkLogIn() {
     console.log(user.username);
     displayUserInfo(user.name);
     handleViewRole(user.role);
-  }
-  else {
+  } else {
     //Display one article with teasers and ad
     displayDefaultArticle();
   }
@@ -149,8 +177,7 @@ function checkLoginStatus() {
   if (user) {
     displayUserInfo(user.name);
     handleViewRole(user.role);
-  }
-  else {
+  } else {
     //Display one article with teasers and ad
     displayDefaultArticle();
   }
@@ -158,8 +185,10 @@ function checkLoginStatus() {
 
 function userLoggedIn(username) {
   const loginButton = document.getElementById("login-button");
-  const loginModal = bootstrap.Modal.getInstance(document.getElementById("loginModal"));
-  
+  const loginModal = bootstrap.Modal.getInstance(
+    document.getElementById("loginModal")
+  );
+
   if (loginModal) {
     loginModal.hide();
   }
@@ -180,3 +209,5 @@ async function getIpAddress() {
     return "Unknown IP";
   }
 }
+
+function initiateNewArticle() {}
