@@ -29,15 +29,17 @@
           <div id="editorcontrols"></div>
           <div id="articles">
             <div class="article" id="article-{{articleId}}">
+              <h3>{{title}}</h3>
+              <p>{{body}}</p>
               
               <div id="comments-{{articleId}}"></div>
-        
-              <form onsubmit="event.preventDefault(); submitComment('{{articleId}}', commentInput.value, userId);">
-                <textarea id="commentInput" placeholder="Add a comment..."></textarea>
+              
+              <form onsubmit="event.preventDefault(); submitComment('{{articleId}}', document.getElementById('commentInput-{{articleId}}').value, userId);">
+                <textarea id="commentInput-{{articleId}}" placeholder="Add a comment..."></textarea>
                 <button type="submit">Post Comment</button>
               </form>
             </div>
-          </div>
+            
         </div>
       </div>
     </main>
