@@ -27,7 +27,17 @@
         <div class="col text-center">
           <h2>Articles</h2>
           <div id="editorcontrols"></div>
-          <div id="articles"></div>
+          <div id="articles">
+            <div class="article" id="article-{{articleId}}">
+              
+              <div id="comments-{{articleId}}"></div>
+        
+              <form onsubmit="event.preventDefault(); submitComment('{{articleId}}', commentInput.value, userId);">
+                <textarea id="commentInput" placeholder="Add a comment..."></textarea>
+                <button type="submit">Post Comment</button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </main>
