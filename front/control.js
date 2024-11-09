@@ -278,3 +278,39 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
     console.error("Error updating article:", error);
   }
 }
+
+async function fetchComments(articleId) {
+  try {
+    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
+    const comments = await response.json();
+    const commentsContainer = document.getElementById(`comments-${articleId}`);
+
+    commentsContainer.innerHTML = comments.map(comment => `
+      <p><strong>${comment.user_id}:</strong> ${comment.comment}</p>
+    `).join("");
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+  }
+}
+
+
+async function submitComment(articleId, commentText, userId) {
+  try {
+    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ comment: commentText, user_id: userId }),
+    });
+
+    if (response.ok) {
+      alert("Comment added successfully!");
+      fetchComments(articleId); 
+    } else {
+      alert("Failed to add comment.");
+    }
+  } catch (error) {
+    console.error("Error adding comment:", error);
+  }
+}
