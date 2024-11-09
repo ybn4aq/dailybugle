@@ -286,12 +286,13 @@ async function fetchComments(articleId) {
     const commentsContainer = document.getElementById(`comments-${articleId}`);
 
     commentsContainer.innerHTML = comments.map(comment => `
-      <p><strong>${comment.user_id}:</strong> ${comment.comment}</p>
+      <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
     `).join("");
   } catch (error) {
     console.error("Error fetching comments:", error);
   }
 }
+
 
 
 async function submitComment(articleId, commentText, userId) {
