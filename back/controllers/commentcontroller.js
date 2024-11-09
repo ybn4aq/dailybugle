@@ -1,8 +1,9 @@
-const { addComment, getComments } = require("../models/Comment");
+const { addCommentToArticle, getComments } = require("../models/Comment");
 
 exports.addComment = async (req, res) => {
   try {
-    await addComment(req.params.id, req.body);
+    const commentData = { comment: req.body.comment, user_id: req.body.user_id };
+    await addCommentToArticle(req.params.id, commentData);
     res.status(201).json({ message: "Comment added successfully" });
   } catch (e) {
     console.error(e);
