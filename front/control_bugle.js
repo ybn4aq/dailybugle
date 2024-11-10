@@ -54,12 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ title, body, teaser, categories }),
       });
       if (response.ok) {
-        alert("Article successfully created!");
+        //alert("Article successfully created!");
         createArticleForm.reset();
         const createArticleModal = bootstrap.Modal.getInstance(
           document.getElementById("createArticleModal")
         );
         createArticleModal.hide();
+        alert("about to fetch");
         fetchArticles();
       }
     } catch (error) {
@@ -124,7 +125,11 @@ function logout() {
 
 
 async function fetchArticles(role) {
+  console.log("fetching articles!");
+  //alert("hello?????");
   try {
+    console.log("fetching articles!");
+   // alert("hello?????");
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
