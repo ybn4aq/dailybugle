@@ -33,7 +33,7 @@
               <p>{{body}}</p>
               
               <div id="comments-{{articleId}}"></div>
-              
+
               <form onsubmit="event.preventDefault(); submitComment('{{articleId}}', document.getElementById('commentInput-{{articleId}}').value, userId);">
                 <textarea id="commentInput-{{articleId}}" placeholder="Add a comment..."></textarea>
                 <button type="submit">Post Comment</button>

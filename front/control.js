@@ -122,35 +122,50 @@ function logout() {
   location.reload(); // Reload to update the UI
 }
 
+
 async function fetchArticles(role) {
   try {
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
 
-    articlesContainer.innerHTML = articles
-      .map((article) => {
-        // Create HTML for each article
-        const editButton =
-          role === "editor"
-            ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
-            : "";
+    // Clear the container initially
+    articlesContainer.innerHTML = '';
 
-        return `
-          <div class="card mb-3" id="article-${article._id}">
-            <div class="card-body">
-              <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
-              <p class="card-text" id="content-${article._id}">${article.body}</p>
-              ${editButton}
-            </div>
+    // Append each article, including the comment section
+    articles.forEach((article) => {
+      const editButton =
+        role === "editor"
+          ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
+          : "";
+
+      // Create the article HTML with a comment form
+      const articleHTML = `
+        <div class="card mb-3" id="article-${article._id}">
+          <div class="card-body">
+            <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+            <p class="card-text" id="content-${article._id}">${article.body}</p>
+            ${editButton}
+            <div id="comments-${article._id}" class="comments-section"></div>
+            <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
+              <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
+              <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
           </div>
-        `;
-      })
-      .join("");
+        </div>
+      `;
+
+      // Append the article HTML to the container
+      articlesContainer.insertAdjacentHTML('beforeend', articleHTML);
+
+      // Fetch and display comments for each article
+      fetchComments(article._id);
+    });
   } catch (error) {
     console.error("Error fetching articles:", error);
   }
 }
+
 
 function checkLogIn() {
   const user = JSON.parse(localStorage.getItem("user"));
