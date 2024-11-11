@@ -300,18 +300,24 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
 }
 
 async function fetchComments(articleId) {
-  try {
-    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
-    const comments = await response.json();
-    const commentsContainer = document.getElementById(`comments-${articleId}`);
-
-    commentsContainer.innerHTML = comments.map(comment => `
-      <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
-    `).join("");
-  } catch (error) {
-    console.error("Error fetching comments:", error);
+    try {
+      const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
+      const comments = await response.json();
+      const commentsContainer = document.getElementById(`comments-${articleId}`);
+  
+      if (Array.isArray(comments)) {
+        commentsContainer.innerHTML = comments.map(comment => `
+          <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+        `).join("");
+      } else {
+        console.error("Comments data is not an array:", comments);
+        commentsContainer.innerHTML = "<p>No comments found.</p>";
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
   }
-}
+  
 
 
 
