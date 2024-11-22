@@ -27,7 +27,19 @@
         <div class="col text-center">
           <h2>Articles</h2>
           <div id="editorcontrols"></div>
-          <div id="articles"></div>
+          <div id="articles">
+            <div class="article" id="article-{{articleId}}">
+              <h3>{{title}}</h3>
+              <p>{{body}}</p>
+              
+              <div id="comments-{{articleId}}"></div>
+
+              <form onsubmit="event.preventDefault(); submitComment('{{articleId}}', document.getElementById('commentInput-{{articleId}}').value, userId);">
+                <textarea id="commentInput-{{articleId}}" placeholder="Add a comment..."></textarea>
+                <button type="submit">Post Comment</button>
+              </form>
+            </div>
+            
         </div>
       </div>
     </main>
@@ -91,6 +103,6 @@
     
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script src="control.js"></script>
+    <script src="control_bugle.js"></script>
   </body>
 </html>

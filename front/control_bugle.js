@@ -54,12 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ title, body, teaser, categories }),
       });
       if (response.ok) {
-        alert("Article successfully created!");
+        //alert("Article successfully created!");
         createArticleForm.reset();
         const createArticleModal = bootstrap.Modal.getInstance(
           document.getElementById("createArticleModal")
         );
         createArticleModal.hide();
+        alert("about to fetch");
         fetchArticles();
       }
     } catch (error) {
@@ -122,35 +123,54 @@ function logout() {
   location.reload(); // Reload to update the UI
 }
 
+
 async function fetchArticles(role) {
+  console.log("fetching articles!");
+  //alert("hello?????");
   try {
+    console.log("fetching articles!");
+   // alert("hello?????");
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
 
-    articlesContainer.innerHTML = articles
-      .map((article) => {
-        // Create HTML for each article
-        const editButton =
-          role === "editor"
-            ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
-            : "";
+    // Clear the container initially
+    articlesContainer.innerHTML = '';
 
-        return `
-          <div class="card mb-3" id="article-${article._id}">
-            <div class="card-body">
-              <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
-              <p class="card-text" id="content-${article._id}">${article.body}</p>
-              ${editButton}
-            </div>
+    // Append each article, including the comment section
+    articles.forEach((article) => {
+      const editButton =
+        role === "editor"
+          ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
+          : "";
+
+      // Create the article HTML with a comment form
+      const articleHTML = `
+        <div class="card mb-3" id="article-${article._id}">
+          <div class="card-body">
+            <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+            <p class="card-text" id="content-${article._id}">${article.body}</p>
+            ${editButton}
+            <div id="comments-${article._id}" class="comments-section"></div>
+            <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
+              <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
+              <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
           </div>
-        `;
-      })
-      .join("");
+        </div>
+      `;
+
+      // Append the article HTML to the container
+      articlesContainer.insertAdjacentHTML('beforeend', articleHTML);
+
+      // Fetch and display comments for each article
+      fetchComments(article._id);
+    });
   } catch (error) {
     console.error("Error fetching articles:", error);
   }
 }
+
 
 function checkLogIn() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -276,5 +296,48 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
     }
   } catch (error) {
     console.error("Error updating article:", error);
+  }
+}
+
+async function fetchComments(articleId) {
+    try {
+      const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
+      const comments = await response.json();
+      const commentsContainer = document.getElementById(`comments-${articleId}`);
+  
+      if (Array.isArray(comments)) {
+        commentsContainer.innerHTML = comments.map(comment => `
+          <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+        `).join("");
+      } else {
+        console.error("Comments data is not an array:", comments);
+        commentsContainer.innerHTML = "<p>No comments found.</p>";
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  }
+  
+
+
+
+async function submitComment(articleId, commentText, userId) {
+  try {
+    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ comment: commentText, user_id: userId }),
+    });
+
+    if (response.ok) {
+      alert("Comment added successfully!");
+      fetchComments(articleId); 
+    } else {
+      alert("Failed to add comment.");
+    }
+  } catch (error) {
+    console.error("Error adding comment:", error);
   }
 }
