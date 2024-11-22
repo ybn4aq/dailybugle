@@ -351,25 +351,23 @@ async function submitComment(articleId, commentText, userId) {
 function displayRandomAd() {
   console.log("displayRandomAd is being hit");
   const ads = [
-    "ads/coke-ad.jpg",
-    "ads/dude-ad.jpg",
-    "ads/heinz-ad.png",
-    "ads/mc-ad.jpg",
+    "ads/ad1.jpg",
+    "ads/ad2.jpg",
+    "ads/ad3.jpeg",
+    "ads/ad4.jpg",
+    "ads/ad5.png",
+    "ads/ad6.jpg"
   ];
 
   const randomIndex = Math.floor(Math.random() * ads.length);
   const selectedAd = ads[randomIndex];
-
+  
   const adContainer = document.getElementById("ad-container");
-
-  if (adContainer) {
-    adContainer.innerHTML = `<img src="${selectedAd}" alt="Advertisement" class="img-fluid" />`;
-  }
+  const adImage = document.getElementById("ad-image");
+  adImage.src = selectedAd
+  // if (adContainer) {
+  //   adContainer.innerHTML = `<img src="${selectedAd}" alt="Advertisement" class="img-fluid" />`;
+  // }
+  console.log("HIHIHII");
 }
 
-const ads = [
-  "ads/coke-ad.jpg",
-  "ads/dude-ad.jpg",
-  "ads/heniz-ad.png",
-  "ads/mc-ad.jpg",
-];
