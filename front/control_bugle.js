@@ -103,7 +103,7 @@ function handleViewRole(role) {
   if (role === "anonymous") {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
-    // Readers can view all articles but not edit
+    // Readers can view one article at a time, can't edit anything
     fetchArticles(role);
   } else if (role === "editor") {
     // Editors can view and edit/create articles
@@ -123,54 +123,103 @@ function logout() {
   location.reload(); // Reload to update the UI
 }
 
-
 async function fetchArticles(role) {
   console.log("fetching articles!");
-  //alert("hello?????");
   try {
-    console.log("fetching articles!");
-   // alert("hello?????");
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
 
-    // Clear the container initially
-    articlesContainer.innerHTML = '';
+    articlesContainer.innerHTML = "";
 
-    // Append each article, including the comment section
-    articles.forEach((article) => {
-      const editButton =
-        role === "editor"
-          ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
-          : "";
+    if (role === "reader") {
+      let currentArticleIndex = 0;
 
-      // Create the article HTML with a comment form
-      const articleHTML = `
-        <div class="card mb-3" id="article-${article._id}">
-          <div class="card-body">
-            <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
-            <p class="card-text" id="content-${article._id}">${article.body}</p>
-            ${editButton}
-            <div id="comments-${article._id}" class="comments-section"></div>
-            <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
-              <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
-              <button type="submit" class="btn btn-primary">Post Comment</button>
-            </form>
+      const renderArticle = (index) => {
+        const article = articles[index];
+        if (!article) return;
+
+        articlesContainer.innerHTML = `
+          <div class="card mb-3" id="article-${article._id}">
+            <div class="card-body">
+              <h5 class="card-title" id="title-${article._id}">${
+          article.title
+        }</h5>
+              <p class="card-text" id="content-${article._id}">${
+          article.body
+        }</p>
+              <div id="comments-${article._id}" class="comments-section"></div>
+              <form onsubmit="event.preventDefault(); submitComment('${
+                article._id
+              }', document.getElementById('commentInput-${
+          article._id
+        }').value, JSON.parse(localStorage.getItem('user')).username);">
+                <textarea id="commentInput-${
+                  article._id
+                }" placeholder="Add a comment..." required></textarea>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+              </form>
+              <div class="navigation-buttons">
+                <button class="btn btn-secondary" id="backButton" ${
+                  index === 0 ? "disabled" : ""
+                }>Back</button>
+                <button class="btn btn-secondary" id="nextButton" ${
+                  index === articles.length - 1 ? "disabled" : ""
+                }>Next</button>
+              </div>
+            </div>
           </div>
-        </div>
-      `;
+        `;
 
-      // Append the article HTML to the container
-      articlesContainer.insertAdjacentHTML('beforeend', articleHTML);
+        fetchComments(article._id);
 
-      // Fetch and display comments for each article
-      fetchComments(article._id);
-    });
+        document.getElementById("backButton").onclick = () => {
+          if (currentArticleIndex > 0) {
+            currentArticleIndex--;
+            renderArticle(currentArticleIndex);
+          }
+        };
+
+        document.getElementById("nextButton").onclick = () => {
+          if (currentArticleIndex < articles.length - 1) {
+            currentArticleIndex++;
+            renderArticle(currentArticleIndex);
+          }
+        };
+      };
+
+      renderArticle(currentArticleIndex);
+    } else {
+      articles.forEach((article) => {
+        const editButton =
+          role === "editor"
+            ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
+            : "";
+
+        const articleHTML = `
+          <div class="card mb-3" id="article-${article._id}">
+            <div class="card-body">
+              <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+              <p class="card-text" id="content-${article._id}">${article.body}</p>
+              ${editButton}
+              <div id="comments-${article._id}" class="comments-section"></div>
+              <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
+                <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+              </form>
+            </div>
+          </div>
+        `;
+
+        articlesContainer.insertAdjacentHTML("beforeend", articleHTML);
+
+        fetchComments(article._id);
+      });
+    }
   } catch (error) {
     console.error("Error fetching articles:", error);
   }
 }
-
 
 function checkLogIn() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -253,39 +302,44 @@ function editArticle(articleId) {
       </div>
     </div>
   `;
-  
+
   // Append the form to the body and show the modal
   document.body.insertAdjacentHTML("beforeend", editFormHTML);
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
   editModal.show();
 
   // Handle the form submission
-  document.getElementById("edit-article-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  document
+    .getElementById("edit-article-form")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    const newTitle = document.getElementById("edit-title").value;
-    const newContent = document.getElementById("edit-content").value;
+      const newTitle = document.getElementById("edit-title").value;
+      const newContent = document.getElementById("edit-content").value;
 
-    // Save the updated article (send it to your backend or update locally)
-    await saveArticleChanges(articleId, newTitle, newContent);
+      // Save the updated article (send it to your backend or update locally)
+      await saveArticleChanges(articleId, newTitle, newContent);
 
-    // Close the modal after saving
-    editModal.hide();
-  });
+      // Close the modal after saving
+      editModal.hide();
+    });
 }
 
 async function saveArticleChanges(articleId, newTitle, newContent) {
   try {
-    const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
-      method: "PUT", // Use PUT to update the article
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: newTitle,
-        body: newContent,
-      }),
-    });
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}`,
+      {
+        method: "PUT", // Use PUT to update the article
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          body: newContent,
+        }),
+      }
+    );
 
     if (response.ok) {
       alert("Article updated successfully!");
@@ -300,40 +354,48 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
 }
 
 async function fetchComments(articleId) {
-    try {
-      const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
-      const comments = await response.json();
-      const commentsContainer = document.getElementById(`comments-${articleId}`);
-  
-      if (Array.isArray(comments)) {
-        commentsContainer.innerHTML = comments.map(comment => `
-          <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
-        `).join("");
-      } else {
-        console.error("Comments data is not an array:", comments);
-        commentsContainer.innerHTML = "<p>No comments found.</p>";
-      }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
+  try {
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}/comments`
+    );
+    const comments = await response.json();
+    const commentsContainer = document.getElementById(`comments-${articleId}`);
+
+    if (Array.isArray(comments)) {
+      commentsContainer.innerHTML = comments
+        .map(
+          (comment) => `
+          <p><strong>${comment.user_id}:</strong> ${
+            comment.comment
+          } <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+        `
+        )
+        .join("");
+    } else {
+      console.error("Comments data is not an array:", comments);
+      commentsContainer.innerHTML = "<p>No comments found.</p>";
     }
+  } catch (error) {
+    console.error("Error fetching comments:", error);
   }
-  
-
-
+}
 
 async function submitComment(articleId, commentText, userId) {
   try {
-    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ comment: commentText, user_id: userId }),
-    });
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}/comments`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ comment: commentText, user_id: userId }),
+      }
+    );
 
     if (response.ok) {
       alert("Comment added successfully!");
-      fetchComments(articleId); 
+      fetchComments(articleId);
     } else {
       alert("Failed to add comment.");
     }
