@@ -1,5 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("helo");
   checkLogIn();
+  displayRandomAd();
+  console.log("here?");
   const createArticleForm = document.getElementById("create-article-form");
   const loginForm = document.getElementById("login-form");
   loginForm.addEventListener("submit", async (e) => {
@@ -7,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-
+    console.log("here?");
     try {
       const response = await fetch("http://localhost:3002/login", {
         method: "POST",
@@ -33,14 +36,18 @@ document.addEventListener("DOMContentLoaded", () => {
         userLoggedIn(data.username);
         displayUserInfo(data.username);
         handleViewRole(data.role);
-      } else {
-        alert(data.error);
+        console.log("here?");
+        checkLogIn();
+        } else {
+          alert(data.error);
+        }
+      } catch (error) {
+        console.error("Error:", error);
       }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  });
+      console.log("here?");
 
+  });
+ 
   createArticleForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const title = document.getElementById("article-title").value;
@@ -341,3 +348,28 @@ async function submitComment(articleId, commentText, userId) {
     console.error("Error adding comment:", error);
   }
 }
+function displayRandomAd() {
+  console.log("displayRandomAd is being hit");
+  const ads = [
+    "ads/coke-ad.jpg",
+    "ads/dude-ad.jpg",
+    "ads/heinz-ad.png",
+    "ads/mc-ad.jpg",
+  ];
+
+  const randomIndex = Math.floor(Math.random() * ads.length);
+  const selectedAd = ads[randomIndex];
+
+  const adContainer = document.getElementById("ad-container");
+
+  if (adContainer) {
+    adContainer.innerHTML = `<img src="${selectedAd}" alt="Advertisement" class="img-fluid" />`;
+  }
+}
+
+const ads = [
+  "ads/coke-ad.jpg",
+  "ads/dude-ad.jpg",
+  "ads/heniz-ad.png",
+  "ads/mc-ad.jpg",
+];
