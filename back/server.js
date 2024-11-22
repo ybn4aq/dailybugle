@@ -22,6 +22,7 @@ app.delete("/articles/:id", articleController.deleteArticle);
 
 // Comment routes
 app.post("/articles/:id/comments", commentController.addComment);
+app.put("/articles/:id/comments", commentController.updateComments);
 app.get("/articles/:id/comments", commentController.getComments);
 
 app.listen(port, () => console.log(`Server running on port ${port}`));

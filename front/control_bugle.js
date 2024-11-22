@@ -126,31 +126,32 @@ function logout() {
 
 async function fetchArticles(role) {
   console.log("fetching articles!");
-  //alert("hello?????");
   try {
     console.log("fetching articles!");
-   // alert("hello?????");
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
 
-    // Clear the container initially
     articlesContainer.innerHTML = '';
-
-    // Append each article, including the comment section
     articles.forEach((article) => {
       const editButton =
         role === "editor"
-          ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
+          ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit Article</button>`
           : "";
 
-      // Create the article HTML with a comment form
+      const editCommentsButton =
+        role === "editor"
+          ? `<button class="btn btn-info btn-sm" onclick="editComments('${article._id}')">Edit Comments</button>`
+          : "";
+
+
       const articleHTML = `
         <div class="card mb-3" id="article-${article._id}">
           <div class="card-body">
             <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
             <p class="card-text" id="content-${article._id}">${article.body}</p>
             ${editButton}
+            ${editCommentsButton}
             <div id="comments-${article._id}" class="comments-section"></div>
             <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
               <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
@@ -160,10 +161,8 @@ async function fetchArticles(role) {
         </div>
       `;
 
-      // Append the article HTML to the container
+      
       articlesContainer.insertAdjacentHTML('beforeend', articleHTML);
-
-      // Fetch and display comments for each article
       fetchComments(article._id);
     });
   } catch (error) {
@@ -274,6 +273,104 @@ function editArticle(articleId) {
   });
 }
 
+function editComments(articleId) {
+  const articleElement = document.getElementById(`article-${articleId}`);
+  const comments = Array.from(
+    articleElement.querySelectorAll(`#comments-${articleId} p[data-comment-id]`)
+  ).map((commentElement) => {
+    const textNode = commentElement.childNodes[2]?.nodeValue.trim() || ""; // Extract the raw comment text
+    return {
+      id: commentElement.dataset.commentId,
+      text: textNode, // This should now only be "BIGLIE"
+    };
+  });
+  
+
+  if (comments.length === 0) {
+    console.error("No comments found to edit.");
+    return;
+  }
+
+  const existingModal = document.getElementById("editCommentsModal");
+  if (existingModal) existingModal.remove();
+
+  const editFormHTML = `
+    <div class="modal fade" id="editCommentsModal" tabindex="-1" aria-labelledby="editCommentsModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editCommentsModalLabel">Edit Comments</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="edit-comments-form">
+              ${comments
+                .map(
+                  (comment) => `
+                  <div class="mb-3">
+                    <label for="edit-comment-${comment.id}" class="form-label">Comment:</label>
+                    <textarea id="edit-comment-${comment.id}" class="form-control" data-comment-id="${comment.id}" required>${comment.text}</textarea>
+                  </div>
+                `
+                )
+                .join("")}
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", editFormHTML);
+
+  const editModal = new bootstrap.Modal(
+    document.getElementById("editCommentsModal")
+  );
+  editModal.show();
+
+  document
+    .getElementById("edit-comments-form")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const updatedComments = comments.map((comment) => ({
+        id: comment.id,
+        text: document.getElementById(`edit-comment-${comment.id}`).value,
+      }));
+
+      await saveCommentsChanges(articleId, updatedComments);
+
+      editModal.hide();
+    });
+}
+
+async function saveCommentsChanges(articleId, updatedComments) {
+  try {
+    console.log(updatedComments);
+    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
+      method: "PUT", // Assuming PUT method for bulk update
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        comments: updatedComments,
+      }),
+    });
+
+    if (response.ok) {
+      alert("Comments updated successfully!");
+      // Reload articles and comments after updating
+      fetchArticles();
+    } else {
+      alert("Failed to update comments.");
+    }
+  } catch (error) {
+    console.error("Error updating comments:", error);
+  }
+}
+
+
 async function saveArticleChanges(articleId, newTitle, newContent) {
   try {
     const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
@@ -306,9 +403,16 @@ async function fetchComments(articleId) {
       const commentsContainer = document.getElementById(`comments-${articleId}`);
   
       if (Array.isArray(comments)) {
-        commentsContainer.innerHTML = comments.map(comment => `
-          <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
-        `).join("");
+        commentsContainer.innerHTML = comments
+          .map(
+            (comment) => `
+              <p data-comment-id="${comment._id}">
+                <strong>${comment.user_id}:</strong> ${comment.comment} 
+                <em>${new Date(comment.dateCreated).toLocaleString()}</em>
+              </p>
+            `
+          )
+          .join("");
       } else {
         console.error("Comments data is not an array:", comments);
         commentsContainer.innerHTML = "<p>No comments found.</p>";
@@ -317,9 +421,6 @@ async function fetchComments(articleId) {
       console.error("Error fetching comments:", error);
     }
   }
-  
-
-
 
 async function submitComment(articleId, commentText, userId) {
   try {

@@ -5,6 +5,7 @@ async function addCommentToArticle(articleId, commentData) {
   try {
     const db = await connectDB();
     const comment = {
+      _id: new ObjectId(),
       comment: commentData.comment,
       dateCreated: new Date(),
       user_id: commentData.user_id,
@@ -30,5 +31,34 @@ async function getComments(articleId) {
   }
 }
 
+async function updateArticleComments(articleId, updatedComments) {
+  try {
+    
+    const db = await connectDB();
 
-module.exports = { addCommentToArticle, getComments };
+    // Iterate over the updatedComments array
+    const bulkOps = updatedComments.map((comment) => ({
+      updateOne: {
+        filter: {
+          _id: new ObjectId(articleId), // Match the article
+          "comments._id": new ObjectId(comment._id), // Match the comment by its ID
+        },
+        update: {
+          $set: {
+            "comments.$.comment": comment.comment, // Update the comment's text
+          },
+        },
+      },
+    }));
+
+    // Execute all updates as a bulk write
+    const result = await db.collection("articles").bulkWrite(bulkOps);
+
+    return result;
+  } catch (error) {
+    console.error("Error in updateComments:", error);
+    throw error;
+  }
+}
+
+module.exports = { addCommentToArticle, getComments, updateArticleComments };

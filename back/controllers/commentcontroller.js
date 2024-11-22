@@ -1,4 +1,4 @@
-const { addCommentToArticle, getComments } = require("../models/Comment");
+const { addCommentToArticle, getComments, updateArticleComments } = require("../models/Comment");
 
 exports.addComment = async (req, res) => {
   try {
@@ -20,3 +20,26 @@ exports.getComments = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.updateComments = async (req, res) => {
+  try {
+    const { articleId } = req.params;
+    const { updatedComments } = req.body;
+
+    // Validate input
+    if (!Array.isArray(updatedComments)) {
+      return res.status(400).json({ error: "Invalid input format" });
+    }
+
+    const result = await updateComments(articleId, updatedComments);
+
+    res.status(200).json({
+      message: "Comments updated successfully",
+      modifiedCount: result.modifiedCount, // Log the number of modified comments
+    });
+  } catch (error) {
+    console.error("Error in updateComments:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
