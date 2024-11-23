@@ -347,7 +347,7 @@ function editComments(articleId) {
 
 async function saveCommentsChanges(articleId, updatedComments) {
   try {
-    console.log(updatedComments);
+    const user = JSON.parse(localStorage.getItem("user"));
     const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
       method: "PUT", // Assuming PUT method for bulk update
       headers: {
@@ -361,7 +361,7 @@ async function saveCommentsChanges(articleId, updatedComments) {
     if (response.ok) {
       alert("Comments updated successfully!");
       // Reload articles and comments after updating
-      fetchArticles();
+      fetchArticles(user.role);
     } else {
       alert("Failed to update comments.");
     }
@@ -373,6 +373,7 @@ async function saveCommentsChanges(articleId, updatedComments) {
 
 async function saveArticleChanges(articleId, newTitle, newContent) {
   try {
+    const user = JSON.parse(localStorage.getItem("user"));
     const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
       method: "PUT", // Use PUT to update the article
       headers: {
@@ -387,7 +388,7 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
     if (response.ok) {
       alert("Article updated successfully!");
       // Reload articles after updating
-      fetchArticles();
+      fetchArticles(user.role);
     } else {
       alert("Failed to update article.");
     }

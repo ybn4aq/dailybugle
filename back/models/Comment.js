@@ -39,15 +39,15 @@ async function updateArticleComments(articleId, updatedComments) {
     // Iterate over the updatedComments array
     const bulkOps = updatedComments.map((comment) => ({
       updateOne: {
-        filter: {
-          _id: new ObjectId(articleId), // Match the article
-          "comments._id": new ObjectId(comment._id), // Match the comment by its ID
-        },
+        filter: { _id: new ObjectId(articleId) }, // Match the article by its ID
         update: {
           $set: {
-            "comments.$.comment": comment.comment, // Update the comment's text
+            "comments.$[elem].comment": comment.text, // Update the comment text
           },
         },
+        arrayFilters: [
+          { "elem._id": new ObjectId(comment.id) }, // Match the specific comment in the array
+        ],
       },
     }));
 

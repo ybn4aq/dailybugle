@@ -23,15 +23,18 @@ exports.getComments = async (req, res) => {
 
 exports.updateComments = async (req, res) => {
   try {
-    const { articleId } = req.params;
-    const { updatedComments } = req.body;
+    const { id } = req.params;
+    const { comments } = req.body;
+
+    const articleId = id;
+    const updatedComments = comments;
 
     // Validate input
     if (!Array.isArray(updatedComments)) {
       return res.status(400).json({ error: "Invalid input format" });
     }
 
-    const result = await updateComments(articleId, updatedComments);
+    const result = await updateArticleComments(articleId, updatedComments);
 
     res.status(200).json({
       message: "Comments updated successfully",
