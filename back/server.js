@@ -15,6 +15,7 @@ app.post("/login", authController.login);
 
 // Article routes
 app.get("/articles", articleController.getArticles);
+app.get("/search-articles/:name", articleController.getArticlesByName);
 app.get("/articles/:id", articleController.getArticleById);
 app.post("/articles", articleController.createArticle);
 app.put("/articles/:id", articleController.updateArticle);

@@ -1,5 +1,5 @@
 const connectDB = require("../db/connect");
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require("mongodb");
 
 async function getArticles() {
   const db = await connectDB();
@@ -18,7 +18,9 @@ async function createArticle(article) {
 
 async function updateArticle(id, article) {
   const db = await connectDB();
-  await db.collection("articles").updateOne({ _id: new ObjectId(id) }, { $set: article });
+  await db
+    .collection("articles")
+    .updateOne({ _id: new ObjectId(id) }, { $set: article });
 }
 
 async function deleteArticle(id) {
@@ -26,4 +28,21 @@ async function deleteArticle(id) {
   await db.collection("articles").deleteOne({ _id: new ObjectId(id) });
 }
 
-module.exports = { getArticles, getArticleById, createArticle, updateArticle, deleteArticle };
+async function searchArticles(query) {
+  console.log(query);
+  const db = await connectDB();
+  await db.collection("articles").createIndex({ title: "text" });
+  await db
+    .collection("articles")
+    .find({ $text: { $search: query } })
+    .toArray();
+}
+
+module.exports = {
+  getArticles,
+  getArticleById,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  searchArticles,
+};

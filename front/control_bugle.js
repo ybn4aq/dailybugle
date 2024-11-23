@@ -104,6 +104,8 @@ function handleViewRole(role) {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
     // Readers can view one article at a time, can't edit anything
+    // Search box
+    showSearchBox();
     fetchArticles(role);
   } else if (role === "editor") {
     // Editors can view and edit/create articles
@@ -401,5 +403,55 @@ async function submitComment(articleId, commentText, userId) {
     }
   } catch (error) {
     console.error("Error adding comment:", error);
+  }
+}
+
+function showSearchBox() {
+  document.getElementById("search-comment-container").hidden = false;
+  document.getElementById("search-article-container").hidden = false;
+}
+
+async function searchComment(query) {}
+
+async function searchArticle(query) {
+  console.log(query);
+  try {
+    const response = await fetch(`http://localhost:3002/search-articles/${query}`, {
+      method: "GET",
+      headers: { "Content-type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch articles");
+    }
+    const articles = await response.json();
+    const resultsContainer = document.getElementById("article-search-results");
+    resultsContainer.innerHTML = "";
+    if (articles.length === 0) {
+      resultsContainer.innerHTML = "<p>No articles found.</p>";
+      return;
+    }
+
+    articles.forEach((article) => {
+      const articleHTML = `
+        <div class="card mb-3" id="article-${article._id}">
+          <div class="card-body">
+            <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+            <p class="card-text" id="content-${article._id}">${article.body}</p>
+            <div id="comments-${article._id}" class="comments-section"></div>
+            <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
+              <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
+              <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+          </div>
+        </div>
+      `;
+      resultsContainer.insertAdjacentHTML("beforeend", articleHTML);
+    });
+  } catch (e) {
+    console.error("Error fetching search results:", e);
+    const resultsContainer = document.getElementById("article-search-results");
+    resultsContainer.innerHTML =
+      "<p>Failed to load search results. Please try again later.</p>";
   }
 }
