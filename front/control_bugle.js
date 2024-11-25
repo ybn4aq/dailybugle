@@ -220,11 +220,11 @@ async function getIpAddress() {
     return "Unknown IP";
   }
 }
-
-function editArticle(articleId) {
-  const articleElement = document.getElementById(`article-${articleId}`);
-  const articleTitle = articleElement.querySelector(".card-title").textContent;
-  const articleContent = articleElement.querySelector(".card-text").textContent;
+ 
+async function editArticle(articleId) {
+  const response = await fetch(`http://localhost:3002/articles/${articleId}`);
+  const articleData = await response.json();
+  const { title, body, categories, teaser } = articleData;
 
   // Create a modal or form to edit the article
   const editFormHTML = `
@@ -239,11 +239,19 @@ function editArticle(articleId) {
             <form id="edit-article-form">
               <div class="mb-3">
                 <label for="edit-title" class="form-label">Title:</label>
-                <input type="text" id="edit-title" class="form-control" value="${articleTitle}" required />
+                <input type="text" id="edit-title" class="form-control" value="${title}" required />
               </div>
               <div class="mb-3">
                 <label for="edit-content" class="form-label">Content:</label>
-                <textarea id="edit-content" class="form-control" required>${articleContent}</textarea>
+                <textarea id="edit-content" class="form-control" required>${body}</textarea>
+              </div>
+              <div class="mb-3">
+                <label for="edit-categories" class="form-label">Categories:</label>
+                <textarea id="edit-categories" class="form-control" required>${categories}</textarea>
+              </div>
+              <div class="mb-3">
+                <label for="edit-teasers" class="form-label">Teasers:</label>
+                <textarea id="edit-teasers" class="form-control" required>${teaser}</textarea>
               </div>
               <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
@@ -264,9 +272,11 @@ function editArticle(articleId) {
 
     const newTitle = document.getElementById("edit-title").value;
     const newContent = document.getElementById("edit-content").value;
+    const newCategory = document.getElementById("edit-categories").value;
+    const newTeaser = document.getElementById("edit-teasers").value;
 
     // Save the updated article (send it to your backend or update locally)
-    await saveArticleChanges(articleId, newTitle, newContent);
+    await saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser);
 
     // Close the modal after saving
     editModal.hide();
@@ -371,7 +381,7 @@ async function saveCommentsChanges(articleId, updatedComments) {
 }
 
 
-async function saveArticleChanges(articleId, newTitle, newContent) {
+async function saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser) {
   try {
     const user = JSON.parse(localStorage.getItem("user"));
     const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
@@ -382,6 +392,8 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
       body: JSON.stringify({
         title: newTitle,
         body: newContent,
+        categories: newCategory,
+        teaser: newTeaser,
       }),
     });
 
