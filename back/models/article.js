@@ -31,11 +31,11 @@ async function deleteArticle(id) {
 async function searchArticles(query) {
   console.log(query);
   const db = await connectDB();
-  await db.collection("articles").createIndex({ title: "text" });
-  await db
+  const articles = await db
     .collection("articles")
     .find({ $text: { $search: query } })
     .toArray();
+  return articles;
 }
 
 module.exports = {
