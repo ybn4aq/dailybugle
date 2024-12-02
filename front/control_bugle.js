@@ -411,15 +411,50 @@ function showSearchBox() {
   document.getElementById("search-article-container").hidden = false;
 }
 
-async function searchComment(query) {}
+async function searchComment(query) {
+  console.log(query);
+  try {
+    const response = await fetch(
+      `http://localhost:3002/search-comments/${query}`,
+      {
+        method: "GET",
+        headers: { "Content-type": "application/json" },
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch comments");
+    }
+    const comments = await response.json();
+    const commentsContainer = document.getElementById("comment-search-results");
+    commentsContainer.innerHTML = "";
+    if (comments.length === 0) {
+      commentsContainer.innerHTML = `<p>No comments found.</p>`;
+      return;
+    }
+    commentsContainer.innerHTML = comments
+      .map(
+        (comment) => `
+          <p><strong>${comment.user_id}:</strong> ${
+          comment.comment
+        } <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+        `
+      )
+      .join("");
+  } catch (e) {
+    console.error("Error fetching comments", e);
+  }
+}
 
 async function searchArticle(query) {
   console.log(query);
   try {
-    const response = await fetch(`http://localhost:3002/search-articles/${query}`, {
-      method: "GET",
-      headers: { "Content-type": "application/json" },
-    });
+    const response = await fetch(
+      `http://localhost:3002/search-articles/${query}`,
+      {
+        method: "GET",
+        headers: { "Content-type": "application/json" },
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Failed to fetch articles");

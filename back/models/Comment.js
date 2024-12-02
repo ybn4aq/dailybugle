@@ -8,7 +8,9 @@ async function addCommentToArticle(articleId, commentData) {
       comment: commentData.comment,
       dateCreated: new Date(),
       user_id: commentData.user_id,
+      author: commentData.user_id,
     };
+    await db.collection("comments").insertOne(comment); // For comment searching
     await db.collection("articles").updateOne(
       { _id: new ObjectId(articleId) }, // Ensure conversion to ObjectId
       { $push: { comments: comment } }
@@ -22,7 +24,9 @@ async function addCommentToArticle(articleId, commentData) {
 async function getComments(articleId) {
   try {
     const db = await connectDB();
-    const article = await db.collection("articles").findOne({ _id: new ObjectId(articleId) });
+    const article = await db
+      .collection("articles")
+      .findOne({ _id: new ObjectId(articleId) });
     return article ? article.comments : [];
   } catch (error) {
     console.error("Error in getComments:", error);
@@ -30,5 +34,14 @@ async function getComments(articleId) {
   }
 }
 
+async function searchComments(query) {
+  const db = await connectDB();
+  console.log(`Searching comments with query: "${query}"`);
+  const comments = await db
+    .collection("comments")
+    .find({ $text: { $search: query } })
+    .toArray();
+  return comments;
+}
 
-module.exports = { addCommentToArticle, getComments };
+module.exports = { addCommentToArticle, getComments, searchComments };
