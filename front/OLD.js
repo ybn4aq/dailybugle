@@ -73,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-    console.log("here?");
     try {
       const response = await fetch("http://localhost:3002/login", {
         method: "POST",
@@ -99,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
         userLoggedIn(data.username);
         displayUserInfo(data.username);
         handleViewRole(data.role);
-        console.log("here?");
         checkLogIn();
         } else {
           alert(data.error);
@@ -107,7 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Error:", error);
       }
-      console.log("here?");
 
   });
  
