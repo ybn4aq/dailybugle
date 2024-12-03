@@ -22,22 +22,32 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   ];
 
-  const adImpressions =
-    JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
-    ads.reduce((acc, ad) => {
-      acc[ad.src] = 0;
-      return acc;
-    }, {});
+  const adInteractions = JSON.parse(localStorage.getItem("adInteractions")) || //persistent storage of interactions
+  ads.reduce((acc, ad) => {
+    acc[ad.src] = 0; 
+    return acc;
+  }, {});
+
+  const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
+  ads.reduce((acc, ad) => {
+    acc[ad.src] = 0; 
+    return acc;
+  }, {});
 
   const adImage = document.getElementById("ad-image");
+  const interactionCountElement = document.getElementById("interaction-count");
   const impressionCountElement = document.getElementById("impression-count");
 
-  let currentAdUrl = "";
+  let currentAdUrl = ""; 
+  function saveInteractions() {
+    localStorage.setItem("adInteractions", JSON.stringify(adInteractions));
+  }
   function saveImpressions() {
     localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
   }
-
+  
   function displayRandomAd() {
+    console.log("displaying random ad");
     if (!adImage) return;
 
     const randomIndex = Math.floor(Math.random() * ads.length);
@@ -46,11 +56,22 @@ document.addEventListener("DOMContentLoaded", () => {
     adImage.src = selectedAd.src;
     adImage.alt = `Advertisement for ${selectedAd.url}`;
     currentAdUrl = selectedAd.url;
-    if (impressionCountElement) {
-      impressionCountElement.textContent = adImpressions[selectedAd.src];
+
+    if (selectedAd && adImpressions[selectedAd.src] !== undefined) {
+        adImpressions[selectedAd.src] += 1; // Increment impressions
+        saveImpressions(); // Save impressions to localStorage
+
+        if (impressionCountElement) {
+            impressionCountElement.textContent = adImpressions[selectedAd.src];
+        }
     }
+
+    if (interactionCountElement) {
+        interactionCountElement.textContent = adInteractions[selectedAd.src];
+    }
+
     console.log(`Displaying ad: ${selectedAd.src}`);
-  }
+}
 
   function handleAdClick() {
     if (!adImage || !adImage.src) return;
@@ -58,23 +79,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentAd = adImage.src.split("/").pop();
     const adPath = ads.find((ad) => ad.src.includes(currentAd));
 
-    if (adPath && adImpressions[adPath.src] !== undefined) {
-      adImpressions[adPath.src] += 1;
-      saveImpressions();
-      if (impressionCountElement) {
-        impressionCountElement.textContent = adImpressions[adPath.src];
+    if (adPath && adInteractions[adPath.src] !== undefined) {
+      adInteractions[adPath.src] += 1;
+      saveInteractions();
+      if (interactionCountElement) {
+        interactionCountElement.textContent = adInteractions[adPath.src];
       }
 
-      console.log(
-        `Ad "${adPath.src}" clicked. Total impressions: ${
-          adImpressions[adPath.src]
-        }`
-      );
+      console.log(`Ad "${adPath.src}" clicked. Total interactions: ${adInteractions[adPath.src]}`);
       if (currentAdUrl) {
         window.location.href = currentAdUrl;
       }
     } else {
-      console.warn(`Ad path "${currentAd}" not found in impressions tracking.`);
+      console.warn(`Ad path "${currentAd}" not found in interactions tracking.`);
     }
   }
   if (adImage) {
@@ -188,13 +205,18 @@ function handleViewRole(role) {
   if (role === "anonymous") {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
+
+    document.getElementById("ad-container").innerHTML = "";
+    document.getElementById("ad-container").style.border = "0px";
+    document.getElementById("ad-container").style.height = 0;
+    document.getElementById("interaction-container").innerHTML = "";
     showSearchBox();
     fetchArticles(role);
   } else if (role === "editor") {
     document.getElementById("ad-container").innerHTML = "";
     document.getElementById("ad-container").style.border = "0px";
     document.getElementById("ad-container").style.height = 0;
-    document.getElementById("impression-container").innerHTML = "";
+    document.getElementById("interaction-container").innerHTML = "";
     showSearchBox();
 
     fetchArticles(role);
@@ -216,6 +238,7 @@ async function fetchArticles(role) {
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
+
 
     articlesContainer.innerHTML = "";
 
@@ -365,10 +388,10 @@ async function getIpAddress() {
   }
 }
 
-async function editArticle(articleId) {
-  const response = await fetch(`http://localhost:3002/articles/${articleId}`);
-  const articleData = await response.json();
-  const { title, body, categories, teaser } = articleData;
+function editArticle(articleId) {
+  const articleElement = document.getElementById(`article-${articleId}`);
+  const articleTitle = articleElement.querySelector(".card-title").textContent;
+  const articleContent = articleElement.querySelector(".card-text").textContent;
 
   const editFormHTML = `
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -382,19 +405,11 @@ async function editArticle(articleId) {
             <form id="edit-article-form">
               <div class="mb-3">
                 <label for="edit-title" class="form-label">Title:</label>
-                <input type="text" id="edit-title" class="form-control" value="${title}" required />
+                <input type="text" id="edit-title" class="form-control" value="${articleTitle}" required />
               </div>
               <div class="mb-3">
                 <label for="edit-content" class="form-label">Content:</label>
-                <textarea id="edit-content" class="form-control" required>${body}</textarea>
-              </div>
-              <div class="mb-3">
-                <label for="edit-categories" class="form-label">Categories:</label>
-                <textarea id="edit-categories" class="form-control" required>${categories}</textarea>
-              </div>
-              <div class="mb-3">
-                <label for="edit-teasers" class="form-label">Teasers:</label>
-                <textarea id="edit-teasers" class="form-control" required>${teaser}</textarea>
+                <textarea id="edit-content" class="form-control" required>${articleContent}</textarea>
               </div>
               <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
@@ -413,6 +428,7 @@ async function editArticle(articleId) {
     .addEventListener("submit", async (e) => {
       e.preventDefault();
 
+
       const newTitle = document.getElementById("edit-title").value;
       const newContent = document.getElementById("edit-content").value;
       const newCategory = document.getElementById("edit-categories").value;
@@ -425,8 +441,6 @@ async function editArticle(articleId) {
         newCategory,
         newTeaser
       );
-
-      await saveArticleChanges(articleId, newTitle, newContent);
 
       editModal.hide();
     });
@@ -632,6 +646,7 @@ async function saveArticleChanges(
 //       const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
 //       const comments = await response.json();
 //       const commentsContainer = document.getElementById(`comments-${articleId}`);
+  
 //       if (Array.isArray(comments)) {
 //         commentsContainer.innerHTML = comments.map(comment => `
 //           <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
