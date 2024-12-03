@@ -14,3 +14,18 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.register = async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const existingUser = await findUser(username);
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+    const newUser = await createUser({ username, password });
+    res.status(201).json(newUser);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
