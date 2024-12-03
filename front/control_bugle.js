@@ -114,11 +114,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const body = document.getElementById("article-body").value;
     const teaser = document.getElementById("article-teaser").value;
     const categories = document.getElementById("article-categories").value;
+    const creationDate = new Date().toLocaleString();
+    const editDate = new Date().toLocaleString();
     try {
       const response = await fetch("http://localhost:3002/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body, teaser, categories }),
+        body: JSON.stringify({ title, body, teaser, categories, creationDate, editDate }),
       });
       if (response.ok) {
         //alert("Article successfully created!");
@@ -214,6 +216,8 @@ async function fetchArticles(role) {
               <h5 class="card-title" id="title-${article._id}">${
           article.title
         }</h5>
+        <p class="card-text"> Created on: ${article.creationDate}</p>
+              <p class="card-text"> Last edited: ${article.editDate}</p>
               <p class="card-text" id="content-${article._id}">${
           article.body
         }</p>
@@ -269,6 +273,8 @@ async function fetchArticles(role) {
           <div class="card mb-3" id="article-${article._id}">
             <div class="card-body">
               <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+              <p class="card-text"> Created on: ${article.creationDate}</p>
+              <p class="card-text"> Last edited: ${article.editDate}</p>
               <p class="card-text" id="content-${article._id}">${article.body}</p>
               ${editButton}
               <div id="comments-${article._id}" class="comments-section"></div>
@@ -665,6 +671,8 @@ async function searchArticle(query) {
         <div class="card mb-3" id="article-${article._id}">
           <div class="card-body">
             <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+            <p class="card-text"> Created on: ${article.creationDate}</p>
+            <p class="card-text"> Last edited: ${article.editDate}</p>
             <p class="card-text" id="content-${article._id}">${article.body}</p>
             <div id="comments-${article._id}" class="comments-section"></div>
             <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
