@@ -16,7 +16,16 @@
     </div>
     <div id="interaction-container">
       <p>Impressions: <span id="impression-count">0</span></p>
-    </div>         
+    </div>
+    <button id="registerButton">Register</button>
+    <div id="registerForm" style="display: none;">
+    <form id="registerFormElement">
+      <input type="text" name="username" placeholder="Username" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Create Account</button>
+    </form>
+    </div>
+         
     <header class="container text-center py-3 border-bottom">
       <div class="row align-items-center">
         <div class="col">
@@ -131,6 +140,6 @@
     
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script src="control_bugles.js"></script>
+    <script src="control_bugless.js"></script>
   </body>
 </html>

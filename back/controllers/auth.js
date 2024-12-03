@@ -1,4 +1,4 @@
-const { findUser } = require("../models/user");
+const { findUser, createUser } = require("../models/user");
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
@@ -17,13 +17,15 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
   const { username, password } = req.body;
+
   try {
-    const existingUser = await findUser(username);
+    const existingUser = await findUser(username, password);
     if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
+      return res.status(400).json({ error: "Username already exists" });
     }
-    const newUser = await createUser({ username, password });
-    res.status(201).json(newUser);
+
+    const userId = await createUser(username, password);
+    res.status(201).json({ message: "User created successfully", userId });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });

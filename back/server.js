@@ -12,6 +12,8 @@ app.use(express.static("./frontend"));
 
 // Authentication routes
 app.post("/login", authController.login);
+// creating user
+app.post("/register", authController.register);
 
 // Article routes
 app.get("/articles", articleController.getArticles);

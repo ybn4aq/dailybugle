@@ -1,3 +1,7 @@
+
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
   checkLogIn();
   //--------- AD STUFF----------
@@ -99,7 +103,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   displayRandomAd();
   //--------- AD STUFF----------
-
+  document.getElementById("registerButton").addEventListener("click", () => {
+    document.getElementById("registerForm").style.display = "block";
+  });
+  
+  document.getElementById("registerFormElement").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = {
+      username: formData.get("username"),
+      password: formData.get("password"),
+    };
+  
+    try {
+      const response = await fetch("/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+  
+      if (response.ok) {
+        alert("Registration successful! You can now log in.");
+        document.getElementById("registerForm").style.display = "none";
+      } else {
+        const error = await response.json();
+        alert("Error: " + error.error);
+      }
+    } catch (e) {
+      console.error("Error during registration:", e);
+    }
+  });
   const createArticleForm = document.getElementById("create-article-form");
   const loginForm = document.getElementById("login-form");
   loginForm.addEventListener("submit", async (e) => {
