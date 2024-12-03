@@ -2,24 +2,37 @@ document.addEventListener("DOMContentLoaded", () => {
   checkLogIn();
   //--------- AD STUFF----------
   const ads = [
-    { src: "ads/ad1.jpg", url: "https://shop.mccormick.com/collections/condiments-sauces" },
+    {
+      src: "ads/ad1.jpg",
+      url: "https://shop.mccormick.com/collections/condiments-sauces",
+    },
     { src: "ads/ad2.jpg", url: "https://www.coca-colastore.com/" },
     { src: "ads/ad3.jpeg", url: "https://www.mcdonalds.com/us/en-us.html" },
-    { src: "ads/ad4.jpg", url: "https://www.xbox.com/en-US/consoles/all-consoles" },
-    { src: "ads/ad5.png", url: "https://www.heinz.com/products/00013000006408-tomato-ketchup" },
-    { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
+    {
+      src: "ads/ad4.jpg",
+      url: "https://www.xbox.com/en-US/consoles/all-consoles",
+    },
+    {
+      src: "ads/ad5.png",
+      url: "https://www.heinz.com/products/00013000006408-tomato-ketchup",
+    },
+    {
+      src: "ads/ad6.jpg",
+      url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html",
+    },
   ];
 
-  const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
-  ads.reduce((acc, ad) => {
-    acc[ad.src] = 0; 
-    return acc;
-  }, {});
+  const adImpressions =
+    JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
+    ads.reduce((acc, ad) => {
+      acc[ad.src] = 0;
+      return acc;
+    }, {});
 
   const adImage = document.getElementById("ad-image");
   const impressionCountElement = document.getElementById("impression-count");
 
-  let currentAdUrl = ""; 
+  let currentAdUrl = "";
   function saveImpressions() {
     localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
   }
@@ -30,9 +43,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const randomIndex = Math.floor(Math.random() * ads.length);
     const selectedAd = ads[randomIndex];
 
-    adImage.src = selectedAd.src; 
-    adImage.alt = `Advertisement for ${selectedAd.url}`; 
-    currentAdUrl = selectedAd.url; 
+    adImage.src = selectedAd.src;
+    adImage.alt = `Advertisement for ${selectedAd.url}`;
+    currentAdUrl = selectedAd.url;
     if (impressionCountElement) {
       impressionCountElement.textContent = adImpressions[selectedAd.src];
     }
@@ -52,7 +65,11 @@ document.addEventListener("DOMContentLoaded", () => {
         impressionCountElement.textContent = adImpressions[adPath.src];
       }
 
-      console.log(`Ad "${adPath.src}" clicked. Total impressions: ${adImpressions[adPath.src]}`);
+      console.log(
+        `Ad "${adPath.src}" clicked. Total impressions: ${
+          adImpressions[adPath.src]
+        }`
+      );
       if (currentAdUrl) {
         window.location.href = currentAdUrl;
       }
@@ -99,15 +116,14 @@ document.addEventListener("DOMContentLoaded", () => {
         displayUserInfo(data.username);
         handleViewRole(data.role);
         checkLogIn();
-        } else {
-          alert(data.error);
-        }
-      } catch (error) {
-        console.error("Error:", error);
+      } else {
+        alert(data.error);
       }
-
+    } catch (error) {
+      console.error("Error:", error);
+    }
   });
- 
+
   createArticleForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const title = document.getElementById("article-title").value;
@@ -190,7 +206,7 @@ function handleViewRole(role) {
 function logout() {
   localStorage.removeItem("loggedIn");
   localStorage.removeItem("user");
-  location.reload(); 
+  location.reload();
 }
 
 async function fetchArticles(role) {
@@ -198,7 +214,7 @@ async function fetchArticles(role) {
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
-    
+
     articlesContainer.innerHTML = "";
 
     if (role === "reader") {
@@ -265,20 +281,26 @@ async function fetchArticles(role) {
             ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
             : "";
 
+        const editCommentsButton =
+          role === "editor"
+            ? `<button class="btn btn-info btn-sm" onclick="editComments('${article._id}')">Edit Comments</button>`
+            : "";
+
         const articleHTML = `
-          <div class="card mb-3" id="article-${article._id}">
-            <div class="card-body">
-              <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
-              <p class="card-text" id="content-${article._id}">${article.body}</p>
-              ${editButton}
-              <div id="comments-${article._id}" class="comments-section"></div>
-              <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
-                <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
-                <button type="submit" class="btn btn-primary">Post Comment</button>
-              </form>
+            <div class="card mb-3" id="article-${article._id}">
+              <div class="card-body">
+                <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+                <p class="card-text" id="content-${article._id}">${article.body}</p>
+                ${editButton}
+                ${editCommentsButton}
+                <div id="comments-${article._id}" class="comments-section"></div>
+                <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
+                  <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
+                  <button type="submit" class="btn btn-primary">Post Comment</button>
+                </form>
+              </div>
             </div>
-          </div>
-        `;
+          `;
 
         articlesContainer.insertAdjacentHTML("beforeend", articleHTML);
 
@@ -337,7 +359,7 @@ async function getIpAddress() {
     return "Unknown IP";
   }
 }
- 
+
 async function editArticle(articleId) {
   const response = await fetch(`http://localhost:3002/articles/${articleId}`);
   const articleData = await response.json();
@@ -376,25 +398,30 @@ async function editArticle(articleId) {
       </div>
     </div>
   `;
-  
+
   document.body.insertAdjacentHTML("beforeend", editFormHTML);
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
   editModal.show();
-
 
   // Handle the form submission
   document
     .getElementById("edit-article-form")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
-    
-    const newTitle = document.getElementById("edit-title").value;
-    const newContent = document.getElementById("edit-content").value;
-    const newCategory = document.getElementById("edit-categories").value;
-    const newTeaser = document.getElementById("edit-teasers").value;
 
-    // Save the updated article (send it to your backend or update locally)
-    await saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser);
+      const newTitle = document.getElementById("edit-title").value;
+      const newContent = document.getElementById("edit-content").value;
+      const newCategory = document.getElementById("edit-categories").value;
+      const newTeaser = document.getElementById("edit-teasers").value;
+
+      // Save the updated article (send it to your backend or update locally)
+      await saveArticleChanges(
+        articleId,
+        newTitle,
+        newContent,
+        newCategory,
+        newTeaser
+      );
 
       // Save the updated article (send it to your backend or update locally)
       await saveArticleChanges(articleId, newTitle, newContent);
@@ -405,18 +432,37 @@ async function editArticle(articleId) {
 }
 
 function editComments(articleId) {
+  // const articleElement = document.getElementById(`article-${articleId}`);
+  // const comments = Array.from(
+  //   articleElement.querySelectorAll(`#comments-${articleId} p[data-comment-id]`)
+  // ).map((commentElement) => {
+  //   const textNode = commentElement.childNodes[2]?.nodeValue.trim() || "";
+  //   return {
+  //     id: commentElement.dataset.commentId,
+  //     text: textNode, 
+  //   };
+  // });
   const articleElement = document.getElementById(`article-${articleId}`);
-  const comments = Array.from(
-    articleElement.querySelectorAll(`#comments-${articleId} p[data-comment-id]`)
-  ).map((commentElement) => {
-    const textNode = commentElement.childNodes[2]?.nodeValue.trim() || ""; // Extract the raw comment text
+  if (!articleElement) {
+    console.error(`Article element with ID "article-${articleId}" not found.`);
+    return [];
+  }
+
+  const commentsContainer = articleElement.querySelector(`#comments-${articleId}`);
+  if (!commentsContainer) {
+    console.error(`Comments container with ID "comments-${articleId}" not found.`);
+    return [];
+  }
+
+  // Query the comment elements within the container
+  const comments = Array.from(commentsContainer.querySelectorAll(`[data-comment-id]`)).map((commentElement) => {
+    const textNode = commentElement.textContent.trim(); // Adjusted to use textContent
     return {
       id: commentElement.dataset.commentId,
-      text: textNode, // This should now only be "BIGLIE"
+      text: textNode,
     };
   });
   
-
   if (comments.length === 0) {
     console.error("No comments found to edit.");
     return;
@@ -479,15 +525,18 @@ function editComments(articleId) {
 async function saveCommentsChanges(articleId, updatedComments) {
   try {
     const user = JSON.parse(localStorage.getItem("user"));
-    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
-      method: "PUT", // Assuming PUT method for bulk update
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        comments: updatedComments,
-      }),
-    });
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}/comments`,
+      {
+        method: "PUT", // Assuming PUT method for bulk update
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comments: updatedComments,
+        }),
+      }
+    );
 
     if (response.ok) {
       alert("Comments updated successfully!");
@@ -501,23 +550,30 @@ async function saveCommentsChanges(articleId, updatedComments) {
   }
 }
 
-
-async function saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser) {
+async function saveArticleChanges(
+  articleId,
+  newTitle,
+  newContent,
+  newCategory,
+  newTeaser
+) {
   try {
-
     const user = JSON.parse(localStorage.getItem("user"));
-    const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
-      method: "PUT", // Use PUT to update the article
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: newTitle,
-        body: newContent,
-        categories: newCategory,
-        teaser: newTeaser,
-      }),
-    });
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}`,
+      {
+        method: "PUT", // Use PUT to update the article
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          body: newContent,
+          categories: newCategory,
+          teaser: newTeaser,
+        }),
+      }
+    );
 
     if (response.ok) {
       alert("Article updated successfully!");
