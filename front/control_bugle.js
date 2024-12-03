@@ -73,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-    console.log("here?");
     try {
       const response = await fetch("http://localhost:3002/login", {
         method: "POST",
@@ -99,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
         userLoggedIn(data.username);
         displayUserInfo(data.username);
         handleViewRole(data.role);
-        console.log("here?");
         checkLogIn();
         } else {
           alert(data.error);
@@ -107,7 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (error) {
         console.error("Error:", error);
       }
-      console.log("here?");
 
   });
  
@@ -344,25 +341,63 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
   }
 }
 
+// async function fetchComments(articleId) {
+//     try {
+//       const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
+//       const comments = await response.json();
+//       const commentsContainer = document.getElementById(`comments-${articleId}`);
+  
+//       if (Array.isArray(comments)) {
+//         commentsContainer.innerHTML = comments.map(comment => `
+//           <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+//         `).join("");
+//       } else {
+//         console.error("Comments data is not an array:", comments);
+//         commentsContainer.innerHTML = "<p>No comments found.</p>";
+//       }
+//     } catch (error) {
+//       console.error("Error fetching comments:", error);
+//     }
+//   }
 async function fetchComments(articleId) {
-    try {
+  try {
       const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
-      const comments = await response.json();
-      const commentsContainer = document.getElementById(`comments-${articleId}`);
-  
-      if (Array.isArray(comments)) {
-        commentsContainer.innerHTML = comments.map(comment => `
-          <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
-        `).join("");
-      } else {
-        console.error("Comments data is not an array:", comments);
-        commentsContainer.innerHTML = "<p>No comments found.</p>";
+
+      if (!response.ok) {
+          console.error(`Error fetching comments: ${response.status} ${response.statusText}`);
+          return;
       }
-    } catch (error) {
+
+      const responseBody = await response.text(); 
+      let comments = [];
+
+      if (responseBody.trim()) {
+          try {
+              comments = JSON.parse(responseBody);
+          } catch (parseError) {
+              console.error("Error parsing JSON from comments response:", parseError, responseBody);
+              return;
+          }
+      }
+
+      const commentsContainer = document.getElementById(`comments-${articleId}`);
+
+      if (Array.isArray(comments) && comments.length > 0) {
+          commentsContainer.innerHTML = comments
+              .map(
+                  (comment) => `
+              <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+          `
+              )
+              .join("");
+      } else {
+          commentsContainer.innerHTML = "<p>No comments found.</p>";
+      }
+  } catch (error) {
       console.error("Error fetching comments:", error);
-    }
   }
-  
+}
+
 async function submitComment(articleId, commentText, userId) {
   try {
     const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
