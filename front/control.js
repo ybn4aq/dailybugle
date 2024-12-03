@@ -16,21 +16,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // }
 
   const ads = [
-    "ads/ad1.jpg",
-    "ads/ad2.jpg",
-    "ads/ad3.jpeg",
-    "ads/ad4.jpg",
-    "ads/ad5.png",
-    "ads/ad6.jpg",
+    { src: "ads/ad1.jpg", url: "https://shop.mccormick.com/collections/condiments-sauces" },
+    { src: "ads/ad2.jpg", url: "https://www.coca-colastore.com/" },
+    { src: "ads/ad3.jpeg", url: "https://www.mcdonalds.com/us/en-us.html" },
+    { src: "ads/ad4.jpg", url: "https://www.xbox.com/en-US/consoles/all-consoles" },
+    { src: "ads/ad5.png", url: "https://www.heinz.com/products/00013000006408-tomato-ketchup" },
+    { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
   ];
 
   const adImpressions = ads.reduce((acc, ad) => {
-    acc[ad] = 0; // Initialize impressions for each ad
+    acc[ad.src] = 0; // Initialize impressions for each ad
     return acc;
   }, {});
 
   const adImage = document.getElementById("ad-image");
   const impressionCountElement = document.getElementById("impression-count");
+
+  let currentAdUrl = ""; // Store the URL of the currently displayed ad
 
   // Display a random ad
   function displayRandomAd() {
@@ -39,9 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const randomIndex = Math.floor(Math.random() * ads.length);
     const selectedAd = ads[randomIndex];
 
-    adImage.src = selectedAd;
-    adImage.alt = `Advertisement for ${selectedAd}`;
-    console.log(`Displaying ad: ${selectedAd}`);
+    adImage.src = selectedAd.src; // Assign the image source
+    adImage.alt = `Advertisement for ${selectedAd.url}`; // Optional: Set alt attribute
+    currentAdUrl = selectedAd.url; // Store the URL for redirection
+    console.log(`Displaying ad: ${selectedAd.src}`);
   }
 
   // Handle ad clicks
@@ -49,17 +52,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!adImage || !adImage.src) return;
 
     const currentAd = adImage.src.split("/").pop();
-    const adPath = ads.find((ad) => ad.includes(currentAd));
+    const adPath = ads.find((ad) => ad.src.includes(currentAd));
 
-    if (adPath && adImpressions[adPath] !== undefined) {
-      adImpressions[adPath] += 1;
+    if (adPath && adImpressions[adPath.src] !== undefined) {
+      adImpressions[adPath.src] += 1;
 
       // Optionally update impressions in the UI
       if (impressionCountElement) {
-        impressionCountElement.textContent = adImpressions[adPath];
+        impressionCountElement.textContent = adImpressions[adPath.src];
       }
 
-      console.log(`Ad "${adPath}" clicked. Total impressions: ${adImpressions[adPath]}`);
+      console.log(`Ad "${adPath.src}" clicked. Total impressions: ${adImpressions[adPath.src]}`);
+
+      // Redirect to the associated URL
+      if (currentAdUrl) {
+        window.location.href = currentAdUrl;
+      }
     } else {
       console.warn(`Ad path "${currentAd}" not found in impressions tracking.`);
     }
@@ -68,7 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event listener for ad clicks
   if (adImage) {
     adImage.addEventListener("click", handleAdClick);
-    //adImage.addEventListener("click", displayRandomAd);
   }
 
   // Initialize ad display
