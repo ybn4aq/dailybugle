@@ -1,5 +1,5 @@
 const { MongoClient } = require("mongodb");
-const uri = "mongodb://localhost:27017";
+const uri = "mongodb://host.docker.internal:27017";
 const client = new MongoClient(uri);
 
 async function connectDB() {

@@ -2,10 +2,11 @@ FROM httpd:latest
 WORKDIR /usr/local/apache2/htdocs
 COPY front/article.css .
 COPY front/article.html .
-COPY front/control.js .
-COPY front/index.css .
+COPY front/control_bugles.js .
+COPY front/indexx.css .
 COPY front/index.html .
 COPY front/new_article.html .
+COPY front/ads ./ads
 WORKDIR /usr/local/apache2/conf/extra
 COPY httpd-config/proxy-html.conf .
 WORKDIR /usr/local/apache2/conf

@@ -19,7 +19,7 @@ spec:
      - containerPort: 3002
        name: "nodeservice"
   - name: task-pv-container
-    image: mongo:latest
+    image: dbk:1
     ports:
      - containerPort: 27017
        name: "mongoservice"
