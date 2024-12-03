@@ -24,16 +24,20 @@ document.addEventListener("DOMContentLoaded", () => {
     { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
   ];
 
-  const adImpressions = ads.reduce((acc, ad) => {
-    acc[ad.src] = 0; // Initialize impressions for each ad
+  const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || 
+  ads.reduce((acc, ad) => {
+    acc[ad.src] = 0; 
     return acc;
   }, {});
+
 
   const adImage = document.getElementById("ad-image");
   const impressionCountElement = document.getElementById("impression-count");
 
   let currentAdUrl = ""; // Store the URL of the currently displayed ad
-
+  function saveImpressions() {
+    localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
+  }
   // Display a random ad
   function displayRandomAd() {
     if (!adImage) return;
@@ -44,6 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
     adImage.src = selectedAd.src; // Assign the image source
     adImage.alt = `Advertisement for ${selectedAd.url}`; // Optional: Set alt attribute
     currentAdUrl = selectedAd.url; // Store the URL for redirection
+    if (impressionCountElement) {
+      impressionCountElement.textContent = adImpressions[selectedAd.src];
+    }
     console.log(`Displaying ad: ${selectedAd.src}`);
   }
 
@@ -56,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (adPath && adImpressions[adPath.src] !== undefined) {
       adImpressions[adPath.src] += 1;
-
+      saveImpressions();
       // Optionally update impressions in the UI
       if (impressionCountElement) {
         impressionCountElement.textContent = adImpressions[adPath.src];
@@ -211,10 +218,8 @@ function logout() {
 
 
 async function fetchArticles(role) {
-  console.log("fetching articles!");
   //alert("hello?????");
   try {
-    console.log("fetching articles!");
    // alert("hello?????");
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
