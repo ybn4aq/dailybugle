@@ -11,14 +11,14 @@ async function addCommentToArticle(articleId, commentData) {
       user_id: commentData.user_id,
       author: commentData.user_id,
     };
-    await db.collection("comments").insertOne(comment); // For comment searching
+    await db.collection("comments").insertOne(comment); 
     await db.collection("articles").updateOne(
-      { _id: new ObjectId(articleId) }, // Ensure conversion to ObjectId
+      { _id: new ObjectId(articleId) }, 
       { $push: { comments: comment } }
     );
   } catch (error) {
     console.error("Error in addCommentToArticle:", error);
-    throw error; // Re-throw error to let the server handle it
+    throw error; 
   }
 }
 
@@ -42,29 +42,28 @@ async function updateArticleComments(articleId, updatedComments) {
     // Iterate over the updatedComments array
     const bulkOps = updatedComments.map((comment) => ({
       updateOne: {
-        filter: { _id: new ObjectId(articleId) }, // Match the article by its ID
+        filter: { _id: new ObjectId(articleId) }, 
         update: {
           $set: {
-            "comments.$[elem].comment": comment.text, // Update the comment text
+            "comments.$[elem].comment": comment.text, 
           },
         },
         arrayFilters: [
-          { "elem._id": new ObjectId(comment.id) }, // Match the specific comment in the array
+          { "elem._id": new ObjectId(comment.id) }, 
         ],
       },
     }));
     const bulkOpsComments = updatedComments.map((comment) => ({
       updateOne: {
-        filter: { _id: new ObjectId(comment.id) }, // Match the comment in the comments collection
+        filter: { _id: new ObjectId(comment.id) }, 
         update: {
           $set: {
-            comment: comment.text, // Update the comment text
+            comment: comment.text, 
           },
         },
       },
     }));
 
-    // Execute all updates as a bulk write
     const result = await db.collection("articles").bulkWrite(bulkOps);
     const commentsResult = await db.collection("comments").bulkWrite(bulkOpsComments);
 

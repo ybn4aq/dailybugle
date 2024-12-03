@@ -408,7 +408,6 @@ async function editArticle(articleId) {
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
   editModal.show();
 
-  // Handle the form submission
   document
     .getElementById("edit-article-form")
     .addEventListener("submit", async (e) => {
@@ -419,7 +418,6 @@ async function editArticle(articleId) {
       const newCategory = document.getElementById("edit-categories").value;
       const newTeaser = document.getElementById("edit-teasers").value;
 
-      // Save the updated article (send it to your backend or update locally)
       await saveArticleChanges(
         articleId,
         newTitle,
@@ -428,104 +426,82 @@ async function editArticle(articleId) {
         newTeaser
       );
 
-      // Save the updated article (send it to your backend or update locally)
       await saveArticleChanges(articleId, newTitle, newContent);
 
-      // Close the modal after saving
       editModal.hide();
     });
 }
 
-function editComments(articleId) {
-  // const articleElement = document.getElementById(`article-${articleId}`);
-  // const comments = Array.from(
-  //   articleElement.querySelectorAll(`#comments-${articleId} p[data-comment-id]`)
-  // ).map((commentElement) => {
-  //   const textNode = commentElement.childNodes[2]?.nodeValue.trim() || "";
-  //   return {
-  //     id: commentElement.dataset.commentId,
-  //     text: textNode, 
-  //   };
-  // });
-  const articleElement = document.getElementById(`article-${articleId}`);
-  if (!articleElement) {
-    console.error(`Article element with ID "article-${articleId}" not found.`);
-    return [];
-  }
+// function editComments(articleId) {
+//   const articleElement = document.getElementById(`article-${articleId}`);
+//   const comments = Array.from(
+//     articleElement.querySelectorAll(`#comments-${articleId} p`)
+//   ).map((commentElement) => {
+//     const textNode = commentElement.childNodes[2]?.nodeValue.trim() || "";
+//     return {
+//       id: commentElement.dataset.commentId,
+//       text: textNode, 
+//     };
+//   });
 
-  const commentsContainer = articleElement.querySelector(`#comments-${articleId}`);
-  if (!commentsContainer) {
-    console.error(`Comments container with ID "comments-${articleId}" not found.`);
-    return [];
-  }
+//   if (comments.length === 0) {
+//     console.error("No comments found to edit.");
+//     return;
+//   }
 
-  // Query the comment elements within the container
-  const comments = Array.from(commentsContainer.querySelectorAll(`[data-comment-id]`)).map((commentElement) => {
-    const textNode = commentElement.textContent.trim(); // Adjusted to use textContent
-    return {
-      id: commentElement.dataset.commentId,
-      text: textNode,
-    };
-  });
-  
-  if (comments.length === 0) {
-    console.error("No comments found to edit.");
-    return;
-  }
+//   const existingModal = document.getElementById("editCommentsModal");
+//   if (existingModal) existingModal.remove();
 
-  const existingModal = document.getElementById("editCommentsModal");
-  if (existingModal) existingModal.remove();
+//   const editFormHTML = `
+//     <div class="modal fade" id="editCommentsModal" tabindex="-1" aria-labelledby="editCommentsModalLabel" aria-hidden="true">
+//       <div class="modal-dialog">
+//         <div class="modal-content">
+//           <div class="modal-header">
+//             <h5 class="modal-title" id="editCommentsModalLabel">Edit Comments</h5>
+//             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+//           </div>
+//           <div class="modal-body">
+//             <form id="edit-comments-form">
+//               ${comments
+//                 .map(
+//                   (comment) => `
+//                   <div class="mb-3">
+//                     <label for="edit-comment-${comment.id}" class="form-label">Comment:</label>
+//                     <textarea id="edit-comment-${comment.id}" class="form-control" data-comment-id="${comment.id}" required>${comment.text}</textarea>
+//                   </div>
+//                 `
+//                 )
+//                 .join("")}
+//               <button type="submit" class="btn btn-primary">Save Changes</button>
+//             </form>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   `;
 
-  const editFormHTML = `
-    <div class="modal fade" id="editCommentsModal" tabindex="-1" aria-labelledby="editCommentsModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editCommentsModalLabel">Edit Comments</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="edit-comments-form">
-              ${comments
-                .map(
-                  (comment) => `
-                  <div class="mb-3">
-                    <label for="edit-comment-${comment.id}" class="form-label">Comment:</label>
-                    <textarea id="edit-comment-${comment.id}" class="form-control" data-comment-id="${comment.id}" required>${comment.text}</textarea>
-                  </div>
-                `
-                )
-                .join("")}
-              <button type="submit" class="btn btn-primary">Save Changes</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+//   document.body.insertAdjacentHTML("beforeend", editFormHTML);
 
-  document.body.insertAdjacentHTML("beforeend", editFormHTML);
+//   const editModal = new bootstrap.Modal(
+//     document.getElementById("editCommentsModal")
+//   );
+//   editModal.show();
 
-  const editModal = new bootstrap.Modal(
-    document.getElementById("editCommentsModal")
-  );
-  editModal.show();
+//   document
+//     .getElementById("edit-comments-form")
+//     .addEventListener("submit", async (e) => {
+//       e.preventDefault();
 
-  document
-    .getElementById("edit-comments-form")
-    .addEventListener("submit", async (e) => {
-      e.preventDefault();
+//       const updatedComments = comments.map((comment) => ({
+//         id: comment.id,
+//         text: document.getElementById(`edit-comment-${comment.id}`).value,
+//       }));
 
-      const updatedComments = comments.map((comment) => ({
-        id: comment.id,
-        text: document.getElementById(`edit-comment-${comment.id}`).value,
-      }));
+//       await saveCommentsChanges(articleId, updatedComments);
 
-      await saveCommentsChanges(articleId, updatedComments);
-
-      editModal.hide();
-    });
-}
+//       editModal.hide();
+//     });
+// }
 
 async function saveCommentsChanges(articleId, updatedComments) {
   try {
@@ -533,7 +509,7 @@ async function saveCommentsChanges(articleId, updatedComments) {
     const response = await fetch(
       `http://localhost:3002/articles/${articleId}/comments`,
       {
-        method: "PUT", // Assuming PUT method for bulk update
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -545,13 +521,73 @@ async function saveCommentsChanges(articleId, updatedComments) {
 
     if (response.ok) {
       alert("Comments updated successfully!");
-      // Reload articles and comments after updating
       fetchArticles(user.role);
     } else {
       alert("Failed to update comments.");
     }
   } catch (error) {
     console.error("Error updating comments:", error);
+  }
+}
+async function editComments(articleId) {
+  try {
+    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
+    const comments = await response.json();
+
+    if (comments.length === 0) {
+      console.error("No comments found to edit.");
+      return;
+    }
+
+    const existingModal = document.getElementById("editCommentsModal");
+    if (existingModal) existingModal.remove();
+
+    const editFormHTML = `
+      <div class="modal fade" id="editCommentsModal" tabindex="-1" aria-labelledby="editCommentsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editCommentsModalLabel">Edit Comments</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="edit-comments-form">
+                ${comments
+                  .map(
+                    (comment) => `
+                    <div class="mb-3">
+                      <label for="edit-comment-${comment._id}" class="form-label">Comment:</label>
+                      <textarea id="edit-comment-${comment._id}" class="form-control" data-comment-id="${comment._id}" required>${comment.comment}</textarea>
+                    </div>`
+                  )
+                  .join("")}
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML("beforeend", editFormHTML);
+
+    const editModal = new bootstrap.Modal(document.getElementById("editCommentsModal"));
+    editModal.show();
+
+    document.getElementById("edit-comments-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const updatedComments = comments.map((comment) => ({
+        id: comment._id,
+        text: document.getElementById(`edit-comment-${comment._id}`).value,
+      }));
+
+      await saveCommentsChanges(articleId, updatedComments);
+
+      editModal.hide();
+    });
+  } catch (error) {
+    console.error("Error editing comments:", error);
   }
 }
 
@@ -582,7 +618,6 @@ async function saveArticleChanges(
 
     if (response.ok) {
       alert("Article updated successfully!");
-      // Reload articles after updating
       fetchArticles(user.role);
     } else {
       alert("Failed to update article.");
