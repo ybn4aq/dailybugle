@@ -15,29 +15,71 @@ document.addEventListener("DOMContentLoaded", () => {
       acc[ad.src] = 0; 
       return acc;
     }, {});
-  
+
+    const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
+    ads.reduce((acc, ad) => {
+      acc[ad.src] = 0; 
+      return acc;
+    }, {});
+
     const adImage = document.getElementById("ad-image");
     const interactionCountElement = document.getElementById("interaction-count");
-  
+    const impressionCountElement = document.getElementById("impression-count");
+
     let currentAdUrl = ""; 
     function saveInteractions() {
       localStorage.setItem("adInteractions", JSON.stringify(adInteractions));
     }
+    function saveImpressions() {
+      localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
+    }
+    // function displayRandomAd() {
+    //   console.log("displaying random ad");
+    //   if (!adImage) return;
   
+    //   const randomIndex = Math.floor(Math.random() * ads.length);
+    //   const selectedAd = ads[randomIndex];
+  
+    //   adImage.src = selectedAd.src; 
+    //   adImage.alt = `Advertisement for ${selectedAd.url}`; 
+    //   currentAdUrl = selectedAd.url; 
+    //   if (interactionCountElement) {
+    //     interactionCountElement.textContent = adInteractions[selectedAd.src];
+    //   }
+    //   if (adPath && adImpressions[selectedAd.src] !== undefined) {
+    //     adImpressions[selectedAd.src] += 1;
+    //     saveImpressions();
+    //     if (impressionCountElement) {
+    //       impressionCountElement.textContent = adImpressions[selectedAd.src];
+    //     }
+    //   console.log(`Displaying ad: ${selectedAd.src}`);
+    // }
     function displayRandomAd() {
+      console.log("displaying random ad");
       if (!adImage) return;
   
       const randomIndex = Math.floor(Math.random() * ads.length);
       const selectedAd = ads[randomIndex];
   
-      adImage.src = selectedAd.src; 
-      adImage.alt = `Advertisement for ${selectedAd.url}`; 
-      currentAdUrl = selectedAd.url; 
-      if (interactionCountElement) {
-        interactionCountElement.textContent = adInteractions[selectedAd.src];
+      adImage.src = selectedAd.src;
+      adImage.alt = `Advertisement for ${selectedAd.url}`;
+      currentAdUrl = selectedAd.url;
+  
+      if (selectedAd && adImpressions[selectedAd.src] !== undefined) {
+          adImpressions[selectedAd.src] += 1; // Increment impressions
+          saveImpressions(); // Save impressions to localStorage
+  
+          if (impressionCountElement) {
+              impressionCountElement.textContent = adImpressions[selectedAd.src];
+          }
       }
+  
+      if (interactionCountElement) {
+          interactionCountElement.textContent = adInteractions[selectedAd.src];
+      }
+  
       console.log(`Displaying ad: ${selectedAd.src}`);
-    }
+  }
   
     function handleAdClick() {
       if (!adImage || !adImage.src) return;
