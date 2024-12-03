@@ -198,7 +198,7 @@ async function fetchArticles(role) {
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
-
+    
     articlesContainer.innerHTML = "";
 
     if (role === "reader") {
@@ -337,11 +337,11 @@ async function getIpAddress() {
     return "Unknown IP";
   }
 }
-
-function editArticle(articleId) {
-  const articleElement = document.getElementById(`article-${articleId}`);
-  const articleTitle = articleElement.querySelector(".card-title").textContent;
-  const articleContent = articleElement.querySelector(".card-text").textContent;
+ 
+async function editArticle(articleId) {
+  const response = await fetch(`http://localhost:3002/articles/${articleId}`);
+  const articleData = await response.json();
+  const { title, body, categories, teaser } = articleData;
 
   const editFormHTML = `
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -355,11 +355,19 @@ function editArticle(articleId) {
             <form id="edit-article-form">
               <div class="mb-3">
                 <label for="edit-title" class="form-label">Title:</label>
-                <input type="text" id="edit-title" class="form-control" value="${articleTitle}" required />
+                <input type="text" id="edit-title" class="form-control" value="${title}" required />
               </div>
               <div class="mb-3">
                 <label for="edit-content" class="form-label">Content:</label>
-                <textarea id="edit-content" class="form-control" required>${articleContent}</textarea>
+                <textarea id="edit-content" class="form-control" required>${body}</textarea>
+              </div>
+              <div class="mb-3">
+                <label for="edit-categories" class="form-label">Categories:</label>
+                <textarea id="edit-categories" class="form-control" required>${categories}</textarea>
+              </div>
+              <div class="mb-3">
+                <label for="edit-teasers" class="form-label">Teasers:</label>
+                <textarea id="edit-teasers" class="form-control" required>${teaser}</textarea>
               </div>
               <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
@@ -379,10 +387,14 @@ function editArticle(articleId) {
     .getElementById("edit-article-form")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
+    
+    const newTitle = document.getElementById("edit-title").value;
+    const newContent = document.getElementById("edit-content").value;
+    const newCategory = document.getElementById("edit-categories").value;
+    const newTeaser = document.getElementById("edit-teasers").value;
 
-
-      const newTitle = document.getElementById("edit-title").value;
-      const newContent = document.getElementById("edit-content").value;
+    // Save the updated article (send it to your backend or update locally)
+    await saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser);
 
       // Save the updated article (send it to your backend or update locally)
       await saveArticleChanges(articleId, newTitle, newContent);
@@ -392,25 +404,125 @@ function editArticle(articleId) {
     });
 }
 
-async function saveArticleChanges(articleId, newTitle, newContent) {
+function editComments(articleId) {
+  const articleElement = document.getElementById(`article-${articleId}`);
+  const comments = Array.from(
+    articleElement.querySelectorAll(`#comments-${articleId} p[data-comment-id]`)
+  ).map((commentElement) => {
+    const textNode = commentElement.childNodes[2]?.nodeValue.trim() || ""; // Extract the raw comment text
+    return {
+      id: commentElement.dataset.commentId,
+      text: textNode, // This should now only be "BIGLIE"
+    };
+  });
+  
+
+  if (comments.length === 0) {
+    console.error("No comments found to edit.");
+    return;
+  }
+
+  const existingModal = document.getElementById("editCommentsModal");
+  if (existingModal) existingModal.remove();
+
+  const editFormHTML = `
+    <div class="modal fade" id="editCommentsModal" tabindex="-1" aria-labelledby="editCommentsModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editCommentsModalLabel">Edit Comments</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="edit-comments-form">
+              ${comments
+                .map(
+                  (comment) => `
+                  <div class="mb-3">
+                    <label for="edit-comment-${comment.id}" class="form-label">Comment:</label>
+                    <textarea id="edit-comment-${comment.id}" class="form-control" data-comment-id="${comment.id}" required>${comment.text}</textarea>
+                  </div>
+                `
+                )
+                .join("")}
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", editFormHTML);
+
+  const editModal = new bootstrap.Modal(
+    document.getElementById("editCommentsModal")
+  );
+  editModal.show();
+
+  document
+    .getElementById("edit-comments-form")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const updatedComments = comments.map((comment) => ({
+        id: comment.id,
+        text: document.getElementById(`edit-comment-${comment.id}`).value,
+      }));
+
+      await saveCommentsChanges(articleId, updatedComments);
+
+      editModal.hide();
+    });
+}
+
+async function saveCommentsChanges(articleId, updatedComments) {
   try {
-    const response = await fetch(
-      `http://localhost:3002/articles/${articleId}`,
-      {
-        method: "PUT", // Use PUT to update the article
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: newTitle,
-          body: newContent,
-        }),
-      }
-    );
+    const user = JSON.parse(localStorage.getItem("user"));
+    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
+      method: "PUT", // Assuming PUT method for bulk update
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        comments: updatedComments,
+      }),
+    });
+
+    if (response.ok) {
+      alert("Comments updated successfully!");
+      // Reload articles and comments after updating
+      fetchArticles(user.role);
+    } else {
+      alert("Failed to update comments.");
+    }
+  } catch (error) {
+    console.error("Error updating comments:", error);
+  }
+}
+
+
+async function saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser) {
+  try {
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
+      method: "PUT", // Use PUT to update the article
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: newTitle,
+        body: newContent,
+        categories: newCategory,
+        teaser: newTeaser,
+      }),
+    });
 
     if (response.ok) {
       alert("Article updated successfully!");
-      fetchArticles();
+      // Reload articles after updating
+      fetchArticles(user.role);
     } else {
       alert("Failed to update article.");
     }
@@ -424,7 +536,6 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
 //       const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
 //       const comments = await response.json();
 //       const commentsContainer = document.getElementById(`comments-${articleId}`);
-  
 //       if (Array.isArray(comments)) {
 //         commentsContainer.innerHTML = comments.map(comment => `
 //           <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
