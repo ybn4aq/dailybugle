@@ -109,6 +109,7 @@ function handleViewRole(role) {
     fetchArticles(role);
   } else if (role === "editor") {
     // Editors can view and edit/create articles
+    showSearchBox();
     fetchArticles(role);
 
     // Ensure editor controls are appended only once
