@@ -19,6 +19,18 @@
         <div class="col">
           <h1>Daily Bugle</h1>
         </div>
+        <div class="col" hidden="true" id="search-comment-container">
+          <form onsubmit="event.preventDefault(); searchComment(document.getElementById('comment-search').value); ">
+            <input type="text" id="comment-search" name="comment-search">
+            <input type="submit" value="Search for comments...">
+          </form>
+        </div>
+        <div class="col" hidden="true" id="search-article-container">
+          <form onsubmit="event.preventDefault(); searchArticle(document.getElementById('article-search').value); ">
+            <input type="text" id="article-search" name="article-search">
+            <input type="submit" value="Search for articles...">
+          </form>
+        </div>
         <div id="login-container" class="col text-end">
           <button id="login-button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#loginModal">
             Login
@@ -27,6 +39,15 @@
         </div>
       </div>
     </header>
+
+    <div id="article-search-results">
+
+    </div>
+
+    <div id="comment-search-results">
+
+    </div>
+
     <main class="container mt-4" id="article-container">
       <div class="row">
         <div class="col text-center">
@@ -44,7 +65,6 @@
                 <button type="submit">Post Comment</button>
               </form>
             </div>
-            
         </div>
       </div>
     </main>
