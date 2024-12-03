@@ -170,11 +170,6 @@ function handleViewRole(role) {
   if (role === "anonymous") {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
-
-    document.getElementById("ad-container").innerHTML = "";
-    document.getElementById("ad-container").style.border = "0px";
-    document.getElementById("ad-container").style.height = 0;
-    document.getElementById("impression-container").innerHTML = "";
     showSearchBox();
     fetchArticles(role);
   } else if (role === "editor") {
