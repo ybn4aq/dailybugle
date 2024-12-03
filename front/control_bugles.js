@@ -2,12 +2,24 @@ document.addEventListener("DOMContentLoaded", () => {
   checkLogIn();
   //--------- AD STUFF----------
   const ads = [
-    { src: "ads/ad1.jpg", url: "https://shop.mccormick.com/collections/condiments-sauces" },
+    {
+      src: "ads/ad1.jpg",
+      url: "https://shop.mccormick.com/collections/condiments-sauces",
+    },
     { src: "ads/ad2.jpg", url: "https://www.coca-colastore.com/" },
     { src: "ads/ad3.jpeg", url: "https://www.mcdonalds.com/us/en-us.html" },
-    { src: "ads/ad4.jpg", url: "https://www.xbox.com/en-US/consoles/all-consoles" },
-    { src: "ads/ad5.png", url: "https://www.heinz.com/products/00013000006408-tomato-ketchup" },
-    { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
+    {
+      src: "ads/ad4.jpg",
+      url: "https://www.xbox.com/en-US/consoles/all-consoles",
+    },
+    {
+      src: "ads/ad5.png",
+      url: "https://www.heinz.com/products/00013000006408-tomato-ketchup",
+    },
+    {
+      src: "ads/ad6.jpg",
+      url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html",
+    },
   ];
 
   const adInteractions = JSON.parse(localStorage.getItem("adInteractions")) || //persistent storage of interactions
@@ -121,26 +133,27 @@ document.addEventListener("DOMContentLoaded", () => {
         displayUserInfo(data.username);
         handleViewRole(data.role);
         checkLogIn();
-        } else {
-          alert(data.error);
-        }
-      } catch (error) {
-        console.error("Error:", error);
+      } else {
+        alert(data.error);
       }
-
+    } catch (error) {
+      console.error("Error:", error);
+    }
   });
- 
+
   createArticleForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const title = document.getElementById("article-title").value;
     const body = document.getElementById("article-body").value;
     const teaser = document.getElementById("article-teaser").value;
     const categories = document.getElementById("article-categories").value;
+    const creationDate = new Date().toLocaleString();
+    const editDate = new Date().toLocaleString();
     try {
       const response = await fetch("http://localhost:3002/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, body, teaser, categories }),
+        body: JSON.stringify({ title, body, teaser, categories, creationDate, editDate }),
       });
       if (response.ok) {
         //alert("Article successfully created!");
@@ -217,7 +230,7 @@ function handleViewRole(role) {
 function logout() {
   localStorage.removeItem("loggedIn");
   localStorage.removeItem("user");
-  location.reload(); 
+  location.reload();
 }
 
 async function fetchArticles(role) {
@@ -225,6 +238,7 @@ async function fetchArticles(role) {
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
+
 
     articlesContainer.innerHTML = "";
 
@@ -241,6 +255,8 @@ async function fetchArticles(role) {
               <h5 class="card-title" id="title-${article._id}">${
           article.title
         }</h5>
+        <p class="card-text"> Created on: ${article.creationDate}</p>
+              <p class="card-text"> Last edited: ${article.editDate}</p>
               <p class="card-text" id="content-${article._id}">${
           article.body
         }</p>
@@ -292,20 +308,27 @@ async function fetchArticles(role) {
             ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
             : "";
 
+        const editCommentsButton =
+          role === "editor"
+            ? `<button class="btn btn-info btn-sm" onclick="editComments('${article._id}')">Edit Comments</button>`
+            : "";
+
         const articleHTML = `
           <div class="card mb-3" id="article-${article._id}">
             <div class="card-body">
               <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+              <p class="card-text"> Created on: ${article.creationDate}</p>
+              <p class="card-text"> Last edited: ${article.editDate}</p>
               <p class="card-text" id="content-${article._id}">${article.body}</p>
               ${editButton}
+              ${editCommentsButton}
               <div id="comments-${article._id}" class="comments-section"></div>
               <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
                 <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
                 <button type="submit" class="btn btn-primary">Post Comment</button>
               </form>
             </div>
-          </div>
-        `;
+          `;
 
         articlesContainer.insertAdjacentHTML("beforeend", articleHTML);
 
@@ -395,11 +418,10 @@ function editArticle(articleId) {
       </div>
     </div>
   `;
-  
+
   document.body.insertAdjacentHTML("beforeend", editFormHTML);
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
   editModal.show();
-
 
   // Handle the form submission
   document
@@ -581,6 +603,8 @@ async function searchArticle(query) {
         <div class="card mb-3" id="article-${article._id}">
           <div class="card-body">
             <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+            <p class="card-text"> Created on: ${article.creationDate}</p>
+            <p class="card-text"> Last edited: ${article.editDate}</p>
             <p class="card-text" id="content-${article._id}">${article.body}</p>
             <div id="comments-${article._id}" class="comments-section"></div>
             <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
