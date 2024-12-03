@@ -1,20 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   checkLogIn();
   //--------- AD STUFF----------
-  // displayRandomAd();
-  // const adImpressions = {
-  //   "ads/ad1.jpg": 0,
-  //   "ads/ad2.jpg": 0,
-  //   "ads/ad3.png": 0,
-  //   "ads/ad4.jpg": 0,
-  //   "ads/ad5.jpg": 0,
-  //   "ads/ad6.jpg": 0
-  // };
-  // const adImage = document.getElementById("ad-image");
-  // if (adImage) {
-  //   adImage.addEventListener("click", handleAdClick);
-  // }
-
   const ads = [
     { src: "ads/ad1.jpg", url: "https://shop.mccormick.com/collections/condiments-sauces" },
     { src: "ads/ad2.jpg", url: "https://www.coca-colastore.com/" },
@@ -24,37 +10,35 @@ document.addEventListener("DOMContentLoaded", () => {
     { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
   ];
 
-  const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || 
+  const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
   ads.reduce((acc, ad) => {
     acc[ad.src] = 0; 
     return acc;
   }, {});
 
-
   const adImage = document.getElementById("ad-image");
   const impressionCountElement = document.getElementById("impression-count");
 
-  let currentAdUrl = ""; // Store the URL of the currently displayed ad
+  let currentAdUrl = ""; 
   function saveImpressions() {
     localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
   }
-  // Display a random ad
+
   function displayRandomAd() {
     if (!adImage) return;
 
     const randomIndex = Math.floor(Math.random() * ads.length);
     const selectedAd = ads[randomIndex];
 
-    adImage.src = selectedAd.src; // Assign the image source
-    adImage.alt = `Advertisement for ${selectedAd.url}`; // Optional: Set alt attribute
-    currentAdUrl = selectedAd.url; // Store the URL for redirection
+    adImage.src = selectedAd.src; 
+    adImage.alt = `Advertisement for ${selectedAd.url}`; 
+    currentAdUrl = selectedAd.url; 
     if (impressionCountElement) {
       impressionCountElement.textContent = adImpressions[selectedAd.src];
     }
     console.log(`Displaying ad: ${selectedAd.src}`);
   }
 
-  // Handle ad clicks
   function handleAdClick() {
     if (!adImage || !adImage.src) return;
 
@@ -64,14 +48,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (adPath && adImpressions[adPath.src] !== undefined) {
       adImpressions[adPath.src] += 1;
       saveImpressions();
-      // Optionally update impressions in the UI
       if (impressionCountElement) {
         impressionCountElement.textContent = adImpressions[adPath.src];
       }
 
       console.log(`Ad "${adPath.src}" clicked. Total impressions: ${adImpressions[adPath.src]}`);
-
-      // Redirect to the associated URL
       if (currentAdUrl) {
         window.location.href = currentAdUrl;
       }
@@ -79,13 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn(`Ad path "${currentAd}" not found in impressions tracking.`);
     }
   }
-
-  // Event listener for ad clicks
   if (adImage) {
     adImage.addEventListener("click", handleAdClick);
   }
-
-  // Initialize ad display
   displayRandomAd();
   //--------- AD STUFF----------
 
@@ -196,13 +173,9 @@ function handleViewRole(role) {
   if (role === "anonymous") {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
-    // Readers can view all articles but not edit
     fetchArticles(role);
   } else if (role === "editor") {
-    // Editors can view and edit/create articles
     fetchArticles(role);
-
-    // Ensure editor controls are appended only once
     editorcontrols.innerHTML = `
       <button id="create-article-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createArticleModal">Create Article</button>
       <p>You have editor access.</p>
@@ -213,29 +186,23 @@ function handleViewRole(role) {
 function logout() {
   localStorage.removeItem("loggedIn");
   localStorage.removeItem("user");
-  location.reload(); // Reload to update the UI
+  location.reload(); 
 }
 
 
 async function fetchArticles(role) {
-  //alert("hello?????");
   try {
-   // alert("hello?????");
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
 
-    // Clear the container initially
     articlesContainer.innerHTML = '';
 
-    // Append each article, including the comment section
     articles.forEach((article) => {
       const editButton =
         role === "editor"
           ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
           : "";
-
-      // Create the article HTML with a comment form
       const articleHTML = `
         <div class="card mb-3" id="article-${article._id}">
           <div class="card-body">
@@ -250,11 +217,7 @@ async function fetchArticles(role) {
           </div>
         </div>
       `;
-
-      // Append the article HTML to the container
       articlesContainer.insertAdjacentHTML('beforeend', articleHTML);
-
-      // Fetch and display comments for each article
       fetchComments(article._id);
     });
   } catch (error) {
@@ -270,7 +233,6 @@ function checkLogIn() {
     displayUserInfo(user.username);
     handleViewRole(user.role);
   } else {
-    //Display one article with teasers and ad
     displayDefaultArticle();
   }
 }
@@ -281,7 +243,6 @@ function checkLoginStatus() {
     displayUserInfo(user.name);
     handleViewRole(user.role);
   } else {
-    //Display one article with teasers and ad
     displayDefaultArticle();
   }
 }
@@ -318,7 +279,6 @@ function editArticle(articleId) {
   const articleTitle = articleElement.querySelector(".card-title").textContent;
   const articleContent = articleElement.querySelector(".card-text").textContent;
 
-  // Create a modal or form to edit the article
   const editFormHTML = `
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -345,22 +305,17 @@ function editArticle(articleId) {
     </div>
   `;
   
-  // Append the form to the body and show the modal
   document.body.insertAdjacentHTML("beforeend", editFormHTML);
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
   editModal.show();
 
-  // Handle the form submission
   document.getElementById("edit-article-form").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const newTitle = document.getElementById("edit-title").value;
     const newContent = document.getElementById("edit-content").value;
 
-    // Save the updated article (send it to your backend or update locally)
     await saveArticleChanges(articleId, newTitle, newContent);
-
-    // Close the modal after saving
     editModal.hide();
   });
 }
@@ -368,7 +323,7 @@ function editArticle(articleId) {
 async function saveArticleChanges(articleId, newTitle, newContent) {
   try {
     const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
-      method: "PUT", // Use PUT to update the article
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
@@ -380,7 +335,6 @@ async function saveArticleChanges(articleId, newTitle, newContent) {
 
     if (response.ok) {
       alert("Article updated successfully!");
-      // Reload articles after updating
       fetchArticles();
     } else {
       alert("Failed to update article.");
@@ -409,9 +363,6 @@ async function fetchComments(articleId) {
     }
   }
   
-
-
-
 async function submitComment(articleId, commentText, userId) {
   try {
     const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
@@ -432,54 +383,3 @@ async function submitComment(articleId, commentText, userId) {
     console.error("Error adding comment:", error);
   }
 }
-// function displayRandomAd() {
-//   console.log("displayRandomAd is being hit");
-//   const ads = [
-//     "ads/ad1.jpg",
-//     "ads/ad2.jpg",
-//     "ads/ad3.jpeg",
-//     "ads/ad4.jpg",
-//     "ads/ad5.png",
-//     "ads/ad6.jpg"
-//   ];
-
-//   const randomIndex = Math.floor(Math.random() * ads.length);
-//   const selectedAd = ads[randomIndex];
-  
-//   const adContainer = document.getElementById("ad-container");
-//   const adImage = document.getElementById("ad-image");
-//   adImage.src = selectedAd
-//   // if (adContainer) {
-//   //   adContainer.innerHTML = `<img src="${selectedAd}" alt="Advertisement" class="img-fluid" />`;
-//   // }
-//   console.log("HIHIHII");
-// }
-
-// function handleAdClick() {
-//   console.log("handleAdClick is being hit.");
-//   const adImpressions = {
-//     "ads/ad1.jpg": 0,
-//     "ads/ad2.jpg": 0,
-//     "ads/ad3.png": 0,
-//     "ads/ad4.jpg": 0,
-//     "ads/ad5.jpg": 0,
-//     "ads/ad6.jpg": 0
-//   };
-//   const adImage = document.getElementById("ad-image");
-//   const currentAd = adImage.src.split("/").pop(); // Get the filename
-//   const adPath = `ads/${currentAd}`;
-
-//   if (adImpressions[adPath] !== undefined) {
-//     adImpressions[adPath] += 1;
-
-//     // Update impressions in the UI
-//     const impressionCountElement = document.getElementById("impression-count");
-//     if (impressionCountElement) {
-//       impressionCountElement.textContent = adImpressions[adPath];
-//     }
-
-//     console.log(`Ad "${adPath}" clicked. Total impressions: ${adImpressions[adPath]}`);
-//   } else {
-//     console.warn(`Ad path "${adPath}" not found in impressions tracking.`);
-//   }
-// }
