@@ -1,0 +1,10 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+- role: worker
+  extraMounts:
+  - hostPath: "/mnt/c/Program Files/MongoDB/Server/8.0/data"
+    containerPath: /data

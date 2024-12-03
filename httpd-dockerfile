@@ -1,0 +1,13 @@
+FROM httpd:latest
+WORKDIR /usr/local/apache2/htdocs
+COPY front/article.css .
+COPY front/article.html .
+COPY front/control.js .
+COPY front/index.css .
+COPY front/index.html .
+COPY front/new_article.html .
+WORKDIR /usr/local/apache2/conf/extra
+COPY httpd-config/proxy-html.conf .
+WORKDIR /usr/local/apache2/conf
+COPY httpd-config/httpd.conf .
+EXPOSE 8002
