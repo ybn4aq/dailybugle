@@ -33,7 +33,6 @@ async function getComments(articleId) {
 
 async function updateArticleComments(articleId, updatedComments) {
   try {
-    
     const db = await connectDB();
 
     // Iterate over the updatedComments array
@@ -50,11 +49,22 @@ async function updateArticleComments(articleId, updatedComments) {
         ],
       },
     }));
+    const bulkOpsComments = updatedComments.map((comment) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(comment.id) }, // Match the comment in the comments collection
+        update: {
+          $set: {
+            comment: comment.text, // Update the comment text
+          },
+        },
+      },
+    }));
 
     // Execute all updates as a bulk write
     const result = await db.collection("articles").bulkWrite(bulkOps);
+    const commentsResult = await db.collection("comments").bulkWrite(bulkOpsComments);
 
-    return result;
+    return {result, commentsResult};
   } catch (error) {
     console.error("Error in updateComments:", error);
     throw error;

@@ -34,11 +34,10 @@ exports.updateComments = async (req, res) => {
       return res.status(400).json({ error: "Invalid input format" });
     }
 
-    const result = await updateArticleComments(articleId, updatedComments);
+    const { result1, result2 } = await updateArticleComments(articleId, updatedComments);
 
     res.status(200).json({
       message: "Comments updated successfully",
-      modifiedCount: result.modifiedCount, // Log the number of modified comments
     });
   } catch (error) {
     console.error("Error in updateComments:", error);
