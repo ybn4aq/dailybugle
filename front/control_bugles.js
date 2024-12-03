@@ -10,6 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
     { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
   ];
 
+  const adInteractions = JSON.parse(localStorage.getItem("adInteractions")) || //persistent storage of interactions
+  ads.reduce((acc, ad) => {
+    acc[ad.src] = 0; 
+    return acc;
+  }, {});
+
   const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
   ads.reduce((acc, ad) => {
     acc[ad.src] = 0; 
@@ -17,27 +23,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }, {});
 
   const adImage = document.getElementById("ad-image");
+  const interactionCountElement = document.getElementById("interaction-count");
   const impressionCountElement = document.getElementById("impression-count");
 
   let currentAdUrl = ""; 
+  function saveInteractions() {
+    localStorage.setItem("adInteractions", JSON.stringify(adInteractions));
+  }
   function saveImpressions() {
     localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
   }
-
+  
   function displayRandomAd() {
+    console.log("displaying random ad");
     if (!adImage) return;
 
     const randomIndex = Math.floor(Math.random() * ads.length);
     const selectedAd = ads[randomIndex];
 
-    adImage.src = selectedAd.src; 
-    adImage.alt = `Advertisement for ${selectedAd.url}`; 
-    currentAdUrl = selectedAd.url; 
-    if (impressionCountElement) {
-      impressionCountElement.textContent = adImpressions[selectedAd.src];
+    adImage.src = selectedAd.src;
+    adImage.alt = `Advertisement for ${selectedAd.url}`;
+    currentAdUrl = selectedAd.url;
+
+    if (selectedAd && adImpressions[selectedAd.src] !== undefined) {
+        adImpressions[selectedAd.src] += 1; // Increment impressions
+        saveImpressions(); // Save impressions to localStorage
+
+        if (impressionCountElement) {
+            impressionCountElement.textContent = adImpressions[selectedAd.src];
+        }
     }
+
+    if (interactionCountElement) {
+        interactionCountElement.textContent = adInteractions[selectedAd.src];
+    }
+
     console.log(`Displaying ad: ${selectedAd.src}`);
-  }
+}
 
   function handleAdClick() {
     if (!adImage || !adImage.src) return;
@@ -45,19 +67,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentAd = adImage.src.split("/").pop();
     const adPath = ads.find((ad) => ad.src.includes(currentAd));
 
-    if (adPath && adImpressions[adPath.src] !== undefined) {
-      adImpressions[adPath.src] += 1;
-      saveImpressions();
-      if (impressionCountElement) {
-        impressionCountElement.textContent = adImpressions[adPath.src];
+    if (adPath && adInteractions[adPath.src] !== undefined) {
+      adInteractions[adPath.src] += 1;
+      saveInteractions();
+      if (interactionCountElement) {
+        interactionCountElement.textContent = adInteractions[adPath.src];
       }
 
-      console.log(`Ad "${adPath.src}" clicked. Total impressions: ${adImpressions[adPath.src]}`);
+      console.log(`Ad "${adPath.src}" clicked. Total interactions: ${adInteractions[adPath.src]}`);
       if (currentAdUrl) {
         window.location.href = currentAdUrl;
       }
     } else {
-      console.warn(`Ad path "${currentAd}" not found in impressions tracking.`);
+      console.warn(`Ad path "${currentAd}" not found in interactions tracking.`);
     }
   }
   if (adImage) {
@@ -170,13 +192,18 @@ function handleViewRole(role) {
   if (role === "anonymous") {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
+
+    document.getElementById("ad-container").innerHTML = "";
+    document.getElementById("ad-container").style.border = "0px";
+    document.getElementById("ad-container").style.height = 0;
+    document.getElementById("interaction-container").innerHTML = "";
     showSearchBox();
     fetchArticles(role);
   } else if (role === "editor") {
     document.getElementById("ad-container").innerHTML = "";
     document.getElementById("ad-container").style.border = "0px";
     document.getElementById("ad-container").style.height = 0;
-    document.getElementById("impression-container").innerHTML = "";
+    document.getElementById("interaction-container").innerHTML = "";
     showSearchBox();
 
     fetchArticles(role);
@@ -198,7 +225,7 @@ async function fetchArticles(role) {
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
-    
+
     articlesContainer.innerHTML = "";
 
     if (role === "reader") {
@@ -337,11 +364,11 @@ async function getIpAddress() {
     return "Unknown IP";
   }
 }
- 
-async function editArticle(articleId) {
-  const response = await fetch(`http://localhost:3002/articles/${articleId}`);
-  const articleData = await response.json();
-  const { title, body, categories, teaser } = articleData;
+
+function editArticle(articleId) {
+  const articleElement = document.getElementById(`article-${articleId}`);
+  const articleTitle = articleElement.querySelector(".card-title").textContent;
+  const articleContent = articleElement.querySelector(".card-text").textContent;
 
   const editFormHTML = `
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -355,19 +382,11 @@ async function editArticle(articleId) {
             <form id="edit-article-form">
               <div class="mb-3">
                 <label for="edit-title" class="form-label">Title:</label>
-                <input type="text" id="edit-title" class="form-control" value="${title}" required />
+                <input type="text" id="edit-title" class="form-control" value="${articleTitle}" required />
               </div>
               <div class="mb-3">
                 <label for="edit-content" class="form-label">Content:</label>
-                <textarea id="edit-content" class="form-control" required>${body}</textarea>
-              </div>
-              <div class="mb-3">
-                <label for="edit-categories" class="form-label">Categories:</label>
-                <textarea id="edit-categories" class="form-control" required>${categories}</textarea>
-              </div>
-              <div class="mb-3">
-                <label for="edit-teasers" class="form-label">Teasers:</label>
-                <textarea id="edit-teasers" class="form-control" required>${teaser}</textarea>
+                <textarea id="edit-content" class="form-control" required>${articleContent}</textarea>
               </div>
               <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
@@ -387,14 +406,10 @@ async function editArticle(articleId) {
     .getElementById("edit-article-form")
     .addEventListener("submit", async (e) => {
       e.preventDefault();
-    
-    const newTitle = document.getElementById("edit-title").value;
-    const newContent = document.getElementById("edit-content").value;
-    const newCategory = document.getElementById("edit-categories").value;
-    const newTeaser = document.getElementById("edit-teasers").value;
 
-    // Save the updated article (send it to your backend or update locally)
-    await saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser);
+
+      const newTitle = document.getElementById("edit-title").value;
+      const newContent = document.getElementById("edit-content").value;
 
       // Save the updated article (send it to your backend or update locally)
       await saveArticleChanges(articleId, newTitle, newContent);
@@ -404,125 +419,25 @@ async function editArticle(articleId) {
     });
 }
 
-function editComments(articleId) {
-  const articleElement = document.getElementById(`article-${articleId}`);
-  const comments = Array.from(
-    articleElement.querySelectorAll(`#comments-${articleId} p[data-comment-id]`)
-  ).map((commentElement) => {
-    const textNode = commentElement.childNodes[2]?.nodeValue.trim() || ""; // Extract the raw comment text
-    return {
-      id: commentElement.dataset.commentId,
-      text: textNode, // This should now only be "BIGLIE"
-    };
-  });
-  
-
-  if (comments.length === 0) {
-    console.error("No comments found to edit.");
-    return;
-  }
-
-  const existingModal = document.getElementById("editCommentsModal");
-  if (existingModal) existingModal.remove();
-
-  const editFormHTML = `
-    <div class="modal fade" id="editCommentsModal" tabindex="-1" aria-labelledby="editCommentsModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editCommentsModalLabel">Edit Comments</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="edit-comments-form">
-              ${comments
-                .map(
-                  (comment) => `
-                  <div class="mb-3">
-                    <label for="edit-comment-${comment.id}" class="form-label">Comment:</label>
-                    <textarea id="edit-comment-${comment.id}" class="form-control" data-comment-id="${comment.id}" required>${comment.text}</textarea>
-                  </div>
-                `
-                )
-                .join("")}
-              <button type="submit" class="btn btn-primary">Save Changes</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML("beforeend", editFormHTML);
-
-  const editModal = new bootstrap.Modal(
-    document.getElementById("editCommentsModal")
-  );
-  editModal.show();
-
-  document
-    .getElementById("edit-comments-form")
-    .addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const updatedComments = comments.map((comment) => ({
-        id: comment.id,
-        text: document.getElementById(`edit-comment-${comment.id}`).value,
-      }));
-
-      await saveCommentsChanges(articleId, updatedComments);
-
-      editModal.hide();
-    });
-}
-
-async function saveCommentsChanges(articleId, updatedComments) {
+async function saveArticleChanges(articleId, newTitle, newContent) {
   try {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
-      method: "PUT", // Assuming PUT method for bulk update
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        comments: updatedComments,
-      }),
-    });
-
-    if (response.ok) {
-      alert("Comments updated successfully!");
-      // Reload articles and comments after updating
-      fetchArticles(user.role);
-    } else {
-      alert("Failed to update comments.");
-    }
-  } catch (error) {
-    console.error("Error updating comments:", error);
-  }
-}
-
-
-async function saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser) {
-  try {
-
-    const user = JSON.parse(localStorage.getItem("user"));
-    const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
-      method: "PUT", // Use PUT to update the article
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: newTitle,
-        body: newContent,
-        categories: newCategory,
-        teaser: newTeaser,
-      }),
-    });
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}`,
+      {
+        method: "PUT", // Use PUT to update the article
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          body: newContent,
+        }),
+      }
+    );
 
     if (response.ok) {
       alert("Article updated successfully!");
-      // Reload articles after updating
-      fetchArticles(user.role);
+      fetchArticles();
     } else {
       alert("Failed to update article.");
     }
@@ -536,6 +451,7 @@ async function saveArticleChanges(articleId, newTitle, newContent, newCategory, 
 //       const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
 //       const comments = await response.json();
 //       const commentsContainer = document.getElementById(`comments-${articleId}`);
+  
 //       if (Array.isArray(comments)) {
 //         commentsContainer.innerHTML = comments.map(comment => `
 //           <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
