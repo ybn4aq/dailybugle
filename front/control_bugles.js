@@ -210,6 +210,7 @@ function handleViewRole(role) {
     document.getElementById("ad-container").style.border = "0px";
     document.getElementById("ad-container").style.height = 0;
     document.getElementById("interaction-container").innerHTML = "";
+    document.getElementById("impression-container").innerHTML = "";
     showSearchBox();
     fetchArticles(role);
   } else if (role === "editor") {
@@ -217,6 +218,7 @@ function handleViewRole(role) {
     document.getElementById("ad-container").style.border = "0px";
     document.getElementById("ad-container").style.height = 0;
     document.getElementById("interaction-container").innerHTML = "";
+    document.getElementById("impression-container").innerHTML = "";
     showSearchBox();
 
     fetchArticles(role);
@@ -388,11 +390,15 @@ async function getIpAddress() {
   }
 }
 
-function editArticle(articleId) {
-  const articleElement = document.getElementById(`article-${articleId}`);
-  const articleTitle = articleElement.querySelector(".card-title").textContent;
-  const articleContent = articleElement.querySelector(".card-text").textContent;
+async function editArticle(articleId) {
+  const response = await fetch(`http://localhost:3002/articles/${articleId}`);
+  const articleData = await response.json();
+  const { title, body, categories, teaser } = articleData;
 
+  const existingModal = document.getElementById("editModal");
+  if (existingModal) existingModal.remove();
+
+  // Create a modal or form to edit the article
   const editFormHTML = `
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -405,11 +411,19 @@ function editArticle(articleId) {
             <form id="edit-article-form">
               <div class="mb-3">
                 <label for="edit-title" class="form-label">Title:</label>
-                <input type="text" id="edit-title" class="form-control" value="${articleTitle}" required />
+                <input type="text" id="edit-title" class="form-control" value="${title}" required />
               </div>
               <div class="mb-3">
                 <label for="edit-content" class="form-label">Content:</label>
-                <textarea id="edit-content" class="form-control" required>${articleContent}</textarea>
+                <textarea id="edit-content" class="form-control" required>${body}</textarea>
+              </div>
+              <div class="mb-3">
+                <label for="edit-categories" class="form-label">Categories:</label>
+                <textarea id="edit-categories" class="form-control" required>${categories}</textarea>
+              </div>
+              <div class="mb-3">
+                <label for="edit-teasers" class="form-label">Teasers:</label>
+                <textarea id="edit-teasers" class="form-control" required>${teaser}</textarea>
               </div>
               <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
@@ -418,32 +432,27 @@ function editArticle(articleId) {
       </div>
     </div>
   `;
-
+  
+  // Append the form to the body and show the modal
   document.body.insertAdjacentHTML("beforeend", editFormHTML);
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
   editModal.show();
 
-  document
-    .getElementById("edit-article-form")
-    .addEventListener("submit", async (e) => {
-      e.preventDefault();
+  // Handle the form submission
+  document.getElementById("edit-article-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
+    const newTitle = document.getElementById("edit-title").value;
+    const newContent = document.getElementById("edit-content").value;
+    const newCategory = document.getElementById("edit-categories").value;
+    const newTeaser = document.getElementById("edit-teasers").value;
 
-      const newTitle = document.getElementById("edit-title").value;
-      const newContent = document.getElementById("edit-content").value;
-      const newCategory = document.getElementById("edit-categories").value;
-      const newTeaser = document.getElementById("edit-teasers").value;
+    // Save the updated article (send it to your backend or update locally)
+    await saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser);
 
-      await saveArticleChanges(
-        articleId,
-        newTitle,
-        newContent,
-        newCategory,
-        newTeaser
-      );
-
-      editModal.hide();
-    });
+    // Close the modal after saving
+    editModal.hide();
+  });
 }
 
 // function editComments(articleId) {
