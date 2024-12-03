@@ -173,8 +173,16 @@ function handleViewRole(role) {
   if (role === "anonymous") {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
+    document.getElementById("ad-container").innerHTML = ""
+    document.getElementById("ad-container").style.border = "0px"
+    document.getElementById("ad-container").style.height = 0
+    document.getElementById("impression-container").innerHTML = ""
     fetchArticles(role);
   } else if (role === "editor") {
+    document.getElementById("ad-container").innerHTML = ""
+    document.getElementById("ad-container").style.border = "0px"
+    document.getElementById("ad-container").style.height = 0
+    document.getElementById("impression-container").innerHTML = ""
     fetchArticles(role);
     editorcontrols.innerHTML = `
       <button id="create-article-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createArticleModal">Create Article</button>
