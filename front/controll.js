@@ -1,8 +1,80 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("helo");
   checkLogIn();
+  //--------- AD STUFF----------
+  // displayRandomAd();
+  // const adImpressions = {
+  //   "ads/ad1.jpg": 0,
+  //   "ads/ad2.jpg": 0,
+  //   "ads/ad3.png": 0,
+  //   "ads/ad4.jpg": 0,
+  //   "ads/ad5.jpg": 0,
+  //   "ads/ad6.jpg": 0
+  // };
+  // const adImage = document.getElementById("ad-image");
+  // if (adImage) {
+  //   adImage.addEventListener("click", handleAdClick);
+  // }
+
+  const ads = [
+    "ads/ad1.jpg",
+    "ads/ad2.jpg",
+    "ads/ad3.jpeg",
+    "ads/ad4.jpg",
+    "ads/ad5.png",
+    "ads/ad6.jpg",
+  ];
+
+  const adImpressions = ads.reduce((acc, ad) => {
+    acc[ad] = 0; // Initialize impressions for each ad
+    return acc;
+  }, {});
+
+  const adImage = document.getElementById("ad-image");
+  const impressionCountElement = document.getElementById("impression-count");
+
+  // Display a random ad
+  function displayRandomAd() {
+    if (!adImage) return;
+
+    const randomIndex = Math.floor(Math.random() * ads.length);
+    const selectedAd = ads[randomIndex];
+
+    adImage.src = selectedAd;
+    adImage.alt = `Advertisement for ${selectedAd}`;
+    console.log(`Displaying ad: ${selectedAd}`);
+  }
+
+  // Handle ad clicks
+  function handleAdClick() {
+    if (!adImage || !adImage.src) return;
+
+    const currentAd = adImage.src.split("/").pop();
+    const adPath = ads.find((ad) => ad.includes(currentAd));
+
+    if (adPath && adImpressions[adPath] !== undefined) {
+      adImpressions[adPath] += 1;
+
+      // Optionally update impressions in the UI
+      if (impressionCountElement) {
+        impressionCountElement.textContent = adImpressions[adPath];
+      }
+
+      console.log(`Ad "${adPath}" clicked. Total impressions: ${adImpressions[adPath]}`);
+    } else {
+      console.warn(`Ad path "${currentAd}" not found in impressions tracking.`);
+    }
+  }
+
+  // Event listener for ad clicks
+  if (adImage) {
+    adImage.addEventListener("click", handleAdClick);
+    //adImage.addEventListener("click", displayRandomAd);
+  }
+
+  // Initialize ad display
   displayRandomAd();
-  console.log("here?");
+  //--------- AD STUFF----------
+
   const createArticleForm = document.getElementById("create-article-form");
   const loginForm = document.getElementById("login-form");
   loginForm.addEventListener("submit", async (e) => {
@@ -348,26 +420,54 @@ async function submitComment(articleId, commentText, userId) {
     console.error("Error adding comment:", error);
   }
 }
-function displayRandomAd() {
-  console.log("displayRandomAd is being hit");
-  const ads = [
-    "ads/ad1.jpg",
-    "ads/ad2.jpg",
-    "ads/ad3.jpeg",
-    "ads/ad4.jpg",
-    "ads/ad5.png",
-    "ads/ad6.jpg"
-  ];
+// function displayRandomAd() {
+//   console.log("displayRandomAd is being hit");
+//   const ads = [
+//     "ads/ad1.jpg",
+//     "ads/ad2.jpg",
+//     "ads/ad3.jpeg",
+//     "ads/ad4.jpg",
+//     "ads/ad5.png",
+//     "ads/ad6.jpg"
+//   ];
 
-  const randomIndex = Math.floor(Math.random() * ads.length);
-  const selectedAd = ads[randomIndex];
+//   const randomIndex = Math.floor(Math.random() * ads.length);
+//   const selectedAd = ads[randomIndex];
   
-  const adContainer = document.getElementById("ad-container");
-  const adImage = document.getElementById("ad-image");
-  adImage.src = selectedAd
-  // if (adContainer) {
-  //   adContainer.innerHTML = `<img src="${selectedAd}" alt="Advertisement" class="img-fluid" />`;
-  // }
-  console.log("HIHIHII");
-}
+//   const adContainer = document.getElementById("ad-container");
+//   const adImage = document.getElementById("ad-image");
+//   adImage.src = selectedAd
+//   // if (adContainer) {
+//   //   adContainer.innerHTML = `<img src="${selectedAd}" alt="Advertisement" class="img-fluid" />`;
+//   // }
+//   console.log("HIHIHII");
+// }
 
+// function handleAdClick() {
+//   console.log("handleAdClick is being hit.");
+//   const adImpressions = {
+//     "ads/ad1.jpg": 0,
+//     "ads/ad2.jpg": 0,
+//     "ads/ad3.png": 0,
+//     "ads/ad4.jpg": 0,
+//     "ads/ad5.jpg": 0,
+//     "ads/ad6.jpg": 0
+//   };
+//   const adImage = document.getElementById("ad-image");
+//   const currentAd = adImage.src.split("/").pop(); // Get the filename
+//   const adPath = `ads/${currentAd}`;
+
+//   if (adImpressions[adPath] !== undefined) {
+//     adImpressions[adPath] += 1;
+
+//     // Update impressions in the UI
+//     const impressionCountElement = document.getElementById("impression-count");
+//     if (impressionCountElement) {
+//       impressionCountElement.textContent = adImpressions[adPath];
+//     }
+
+//     console.log(`Ad "${adPath}" clicked. Total impressions: ${adImpressions[adPath]}`);
+//   } else {
+//     console.warn(`Ad path "${adPath}" not found in impressions tracking.`);
+//   }
+// }
