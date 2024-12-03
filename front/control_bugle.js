@@ -1,5 +1,71 @@
 document.addEventListener("DOMContentLoaded", () => {
   checkLogIn();
+  //--------- AD STUFF----------
+  const ads = [
+    { src: "ads/ad1.jpg", url: "https://shop.mccormick.com/collections/condiments-sauces" },
+    { src: "ads/ad2.jpg", url: "https://www.coca-colastore.com/" },
+    { src: "ads/ad3.jpeg", url: "https://www.mcdonalds.com/us/en-us.html" },
+    { src: "ads/ad4.jpg", url: "https://www.xbox.com/en-US/consoles/all-consoles" },
+    { src: "ads/ad5.png", url: "https://www.heinz.com/products/00013000006408-tomato-ketchup" },
+    { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
+  ];
+
+  const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
+  ads.reduce((acc, ad) => {
+    acc[ad.src] = 0; 
+    return acc;
+  }, {});
+
+  const adImage = document.getElementById("ad-image");
+  const impressionCountElement = document.getElementById("impression-count");
+
+  let currentAdUrl = ""; 
+  function saveImpressions() {
+    localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
+  }
+
+  function displayRandomAd() {
+    if (!adImage) return;
+
+    const randomIndex = Math.floor(Math.random() * ads.length);
+    const selectedAd = ads[randomIndex];
+
+    adImage.src = selectedAd.src; 
+    adImage.alt = `Advertisement for ${selectedAd.url}`; 
+    currentAdUrl = selectedAd.url; 
+    if (impressionCountElement) {
+      impressionCountElement.textContent = adImpressions[selectedAd.src];
+    }
+    console.log(`Displaying ad: ${selectedAd.src}`);
+  }
+
+  function handleAdClick() {
+    if (!adImage || !adImage.src) return;
+
+    const currentAd = adImage.src.split("/").pop();
+    const adPath = ads.find((ad) => ad.src.includes(currentAd));
+
+    if (adPath && adImpressions[adPath.src] !== undefined) {
+      adImpressions[adPath.src] += 1;
+      saveImpressions();
+      if (impressionCountElement) {
+        impressionCountElement.textContent = adImpressions[adPath.src];
+      }
+
+      console.log(`Ad "${adPath.src}" clicked. Total impressions: ${adImpressions[adPath.src]}`);
+      if (currentAdUrl) {
+        window.location.href = currentAdUrl;
+      }
+    } else {
+      console.warn(`Ad path "${currentAd}" not found in impressions tracking.`);
+    }
+  }
+  if (adImage) {
+    adImage.addEventListener("click", handleAdClick);
+  }
+  displayRandomAd();
+  //--------- AD STUFF----------
+
   const createArticleForm = document.getElementById("create-article-form");
   const loginForm = document.getElementById("login-form");
   loginForm.addEventListener("submit", async (e) => {
@@ -7,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-
     try {
       const response = await fetch("http://localhost:3002/login", {
         method: "POST",
@@ -33,14 +98,16 @@ document.addEventListener("DOMContentLoaded", () => {
         userLoggedIn(data.username);
         displayUserInfo(data.username);
         handleViewRole(data.role);
-      } else {
-        alert(data.error);
+        checkLogIn();
+        } else {
+          alert(data.error);
+        }
+      } catch (error) {
+        console.error("Error:", error);
       }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  });
 
+  });
+ 
   createArticleForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const title = document.getElementById("article-title").value;
@@ -103,13 +170,16 @@ function handleViewRole(role) {
   if (role === "anonymous") {
     articlesContainer.innerHTML = "<p>Please log in to view more articles.</p>";
   } else if (role === "reader") {
-    // Readers can view all articles but not edit
+    showSearchBox();
     fetchArticles(role);
   } else if (role === "editor") {
-    // Editors can view and edit/create articles
-    fetchArticles(role);
+    document.getElementById("ad-container").innerHTML = "";
+    document.getElementById("ad-container").style.border = "0px";
+    document.getElementById("ad-container").style.height = 0;
+    document.getElementById("impression-container").innerHTML = "";
+    showSearchBox();
 
-    // Ensure editor controls are appended only once
+    fetchArticles(role);
     editorcontrols.innerHTML = `
       <button id="create-article-btn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createArticleModal">Create Article</button>
       <p>You have editor access.</p>
@@ -120,56 +190,105 @@ function handleViewRole(role) {
 function logout() {
   localStorage.removeItem("loggedIn");
   localStorage.removeItem("user");
-  location.reload(); // Reload to update the UI
+  location.reload(); 
 }
 
-
 async function fetchArticles(role) {
-  console.log("fetching articles!");
   try {
-    console.log("fetching articles!");
     const response = await fetch("http://localhost:3002/articles");
     const articles = await response.json();
     const articlesContainer = document.getElementById("articles");
+    
+    articlesContainer.innerHTML = "";
 
-    articlesContainer.innerHTML = '';
-    articles.forEach((article) => {
-      const editButton =
-        role === "editor"
-          ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit Article</button>`
-          : "";
+    if (role === "reader") {
+      let currentArticleIndex = 0;
 
-      const editCommentsButton =
-        role === "editor"
-          ? `<button class="btn btn-info btn-sm" onclick="editComments('${article._id}')">Edit Comments</button>`
-          : "";
+      const renderArticle = (index) => {
+        const article = articles[index];
+        if (!article) return;
 
-
-      const articleHTML = `
-        <div class="card mb-3" id="article-${article._id}">
-          <div class="card-body">
-            <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
-            <p class="card-text" id="content-${article._id}">${article.body}</p>
-            ${editButton}
-            ${editCommentsButton}
-            <div id="comments-${article._id}" class="comments-section"></div>
-            <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
-              <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
-              <button type="submit" class="btn btn-primary">Post Comment</button>
-            </form>
+        articlesContainer.innerHTML = `
+          <div class="card mb-3" id="article-${article._id}">
+            <div class="card-body">
+              <h5 class="card-title" id="title-${article._id}">${
+          article.title
+        }</h5>
+              <p class="card-text" id="content-${article._id}">${
+          article.body
+        }</p>
+              <div id="comments-${article._id}" class="comments-section"></div>
+              <form onsubmit="event.preventDefault(); submitComment('${
+                article._id
+              }', document.getElementById('commentInput-${
+          article._id
+        }').value, JSON.parse(localStorage.getItem('user')).username);">
+                <textarea id="commentInput-${
+                  article._id
+                }" placeholder="Add a comment..." required></textarea>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+              </form>
+              <div class="navigation-buttons">
+                <button class="btn btn-secondary" id="backButton" ${
+                  index === 0 ? "disabled" : ""
+                }>Back</button>
+                <button class="btn btn-secondary" id="nextButton" ${
+                  index === articles.length - 1 ? "disabled" : ""
+                }>Next</button>
+              </div>
+            </div>
           </div>
-        </div>
-      `;
+        `;
 
-      
-      articlesContainer.insertAdjacentHTML('beforeend', articleHTML);
-      fetchComments(article._id);
-    });
+        fetchComments(article._id);
+
+        document.getElementById("backButton").onclick = () => {
+          if (currentArticleIndex > 0) {
+            currentArticleIndex--;
+            renderArticle(currentArticleIndex);
+          }
+        };
+
+        document.getElementById("nextButton").onclick = () => {
+          if (currentArticleIndex < articles.length - 1) {
+            currentArticleIndex++;
+            renderArticle(currentArticleIndex);
+          }
+        };
+      };
+
+      renderArticle(currentArticleIndex);
+    } else {
+      articles.forEach((article) => {
+        const editButton =
+          role === "editor"
+            ? `<button class="btn btn-warning btn-sm" onclick="editArticle('${article._id}')">Edit</button>`
+            : "";
+
+        const articleHTML = `
+          <div class="card mb-3" id="article-${article._id}">
+            <div class="card-body">
+              <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+              <p class="card-text" id="content-${article._id}">${article.body}</p>
+              ${editButton}
+              <div id="comments-${article._id}" class="comments-section"></div>
+              <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
+                <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+              </form>
+            </div>
+          </div>
+        `;
+
+        articlesContainer.insertAdjacentHTML("beforeend", articleHTML);
+
+        fetchComments(article._id);
+      });
+    }
   } catch (error) {
     console.error("Error fetching articles:", error);
   }
 }
-
 
 function checkLogIn() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -178,7 +297,6 @@ function checkLogIn() {
     displayUserInfo(user.username);
     handleViewRole(user.role);
   } else {
-    //Display one article with teasers and ad
     displayDefaultArticle();
   }
 }
@@ -189,7 +307,6 @@ function checkLoginStatus() {
     displayUserInfo(user.name);
     handleViewRole(user.role);
   } else {
-    //Display one article with teasers and ad
     displayDefaultArticle();
   }
 }
@@ -226,7 +343,6 @@ async function editArticle(articleId) {
   const articleData = await response.json();
   const { title, body, categories, teaser } = articleData;
 
-  // Create a modal or form to edit the article
   const editFormHTML = `
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -261,15 +377,17 @@ async function editArticle(articleId) {
     </div>
   `;
   
-  // Append the form to the body and show the modal
   document.body.insertAdjacentHTML("beforeend", editFormHTML);
   const editModal = new bootstrap.Modal(document.getElementById("editModal"));
   editModal.show();
 
-  // Handle the form submission
-  document.getElementById("edit-article-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
 
+  // Handle the form submission
+  document
+    .getElementById("edit-article-form")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+    
     const newTitle = document.getElementById("edit-title").value;
     const newContent = document.getElementById("edit-content").value;
     const newCategory = document.getElementById("edit-categories").value;
@@ -278,9 +396,12 @@ async function editArticle(articleId) {
     // Save the updated article (send it to your backend or update locally)
     await saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser);
 
-    // Close the modal after saving
-    editModal.hide();
-  });
+      // Save the updated article (send it to your backend or update locally)
+      await saveArticleChanges(articleId, newTitle, newContent);
+
+      // Close the modal after saving
+      editModal.hide();
+    });
 }
 
 function editComments(articleId) {
@@ -383,6 +504,7 @@ async function saveCommentsChanges(articleId, updatedComments) {
 
 async function saveArticleChanges(articleId, newTitle, newContent, newCategory, newTeaser) {
   try {
+
     const user = JSON.parse(localStorage.getItem("user"));
     const response = await fetch(`http://localhost:3002/articles/${articleId}`, {
       method: "PUT", // Use PUT to update the article
@@ -409,49 +531,155 @@ async function saveArticleChanges(articleId, newTitle, newContent, newCategory, 
   }
 }
 
+// async function fetchComments(articleId) {
+//     try {
+//       const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
+//       const comments = await response.json();
+//       const commentsContainer = document.getElementById(`comments-${articleId}`);
+//       if (Array.isArray(comments)) {
+//         commentsContainer.innerHTML = comments.map(comment => `
+//           <p><strong>${comment.user_id}:</strong> ${comment.comment} <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+//         `).join("");
+//       } else {
+//         console.error("Comments data is not an array:", comments);
+//         commentsContainer.innerHTML = "<p>No comments found.</p>";
+//       }
+//     } catch (error) {
+//       console.error("Error fetching comments:", error);
+//     }
+//   }
 async function fetchComments(articleId) {
-    try {
-      const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`);
-      const comments = await response.json();
-      const commentsContainer = document.getElementById(`comments-${articleId}`);
-  
-      if (Array.isArray(comments)) {
-        commentsContainer.innerHTML = comments
-          .map(
-            (comment) => `
-              <p data-comment-id="${comment._id}">
-                <strong>${comment.user_id}:</strong> ${comment.comment} 
-                <em>${new Date(comment.dateCreated).toLocaleString()}</em>
-              </p>
-            `
-          )
-          .join("");
-      } else {
-        console.error("Comments data is not an array:", comments);
-        commentsContainer.innerHTML = "<p>No comments found.</p>";
-      }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
+  try {
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}/comments`
+    );
+    const comments = await response.json();
+    const commentsContainer = document.getElementById(`comments-${articleId}`);
+
+    if (Array.isArray(comments)) {
+      commentsContainer.innerHTML = comments
+        .map(
+          (comment) => `
+          <p><strong>${comment.user_id}:</strong> ${
+            comment.comment
+          } <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+        `
+        )
+        .join("");
+    } else {
+      console.error("Comments data is not an array:", comments);
+      commentsContainer.innerHTML = "<p>No comments found.</p>";
     }
+  } catch (error) {
+    console.error("Error fetching comments:", error);
   }
+}
 
 async function submitComment(articleId, commentText, userId) {
   try {
-    const response = await fetch(`http://localhost:3002/articles/${articleId}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ comment: commentText, user_id: userId }),
-    });
+    const response = await fetch(
+      `http://localhost:3002/articles/${articleId}/comments`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ comment: commentText, user_id: userId }),
+      }
+    );
 
     if (response.ok) {
       alert("Comment added successfully!");
-      fetchComments(articleId); 
+      fetchComments(articleId);
     } else {
       alert("Failed to add comment.");
     }
   } catch (error) {
     console.error("Error adding comment:", error);
+  }
+}
+
+function showSearchBox() {
+  document.getElementById("search-comment-container").hidden = false;
+  document.getElementById("search-article-container").hidden = false;
+}
+
+async function searchComment(query) {
+  console.log(query);
+  try {
+    const response = await fetch(
+      `http://localhost:3002/search-comments/${query}`,
+      {
+        method: "GET",
+        headers: { "Content-type": "application/json" },
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch comments");
+    }
+    const comments = await response.json();
+    const commentsContainer = document.getElementById("comment-search-results");
+    commentsContainer.innerHTML = "";
+    if (comments.length === 0) {
+      commentsContainer.innerHTML = `<p>No comments found.</p>`;
+      return;
+    }
+    commentsContainer.innerHTML = comments
+      .map(
+        (comment) => `
+          <p><strong>${comment.user_id}:</strong> ${
+          comment.comment
+        } <em>${new Date(comment.dateCreated).toLocaleString()}</em></p>
+        `
+      )
+      .join("");
+  } catch (e) {
+    console.error("Error fetching comments", e);
+  }
+}
+
+async function searchArticle(query) {
+  console.log(query);
+  try {
+    const response = await fetch(
+      `http://localhost:3002/search-articles/${query}`,
+      {
+        method: "GET",
+        headers: { "Content-type": "application/json" },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch articles");
+    }
+    const articles = await response.json();
+    const resultsContainer = document.getElementById("article-search-results");
+    resultsContainer.innerHTML = "";
+    if (articles.length === 0) {
+      resultsContainer.innerHTML = "<p>No articles found.</p>";
+      return;
+    }
+
+    articles.forEach((article) => {
+      const articleHTML = `
+        <div class="card mb-3" id="article-${article._id}">
+          <div class="card-body">
+            <h5 class="card-title" id="title-${article._id}">${article.title}</h5>
+            <p class="card-text" id="content-${article._id}">${article.body}</p>
+            <div id="comments-${article._id}" class="comments-section"></div>
+            <form onsubmit="event.preventDefault(); submitComment('${article._id}', document.getElementById('commentInput-${article._id}').value, JSON.parse(localStorage.getItem('user')).username);">
+              <textarea id="commentInput-${article._id}" placeholder="Add a comment..." required></textarea>
+              <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+          </div>
+        </div>
+      `;
+      resultsContainer.insertAdjacentHTML("beforeend", articleHTML);
+    });
+  } catch (e) {
+    console.error("Error fetching search results:", e);
+    const resultsContainer = document.getElementById("article-search-results");
+    resultsContainer.innerHTML =
+      "<p>Failed to load search results. Please try again later.</p>";
   }
 }

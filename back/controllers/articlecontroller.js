@@ -1,4 +1,11 @@
-const { getArticles, getArticleById, createArticle, updateArticle, deleteArticle } = require("../models/article");
+const {
+  getArticles,
+  getArticleById,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  searchArticles
+} = require("../models/article");
 
 exports.getArticles = async (req, res) => {
   try {
@@ -9,7 +16,7 @@ exports.getArticles = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-//hi
+
 exports.getArticleById = async (req, res) => {
   try {
     const article = await getArticleById(req.params.id);
@@ -40,7 +47,7 @@ exports.updateArticle = async (req, res) => {
     res.status(200).json({ message: "Article updated successfully" });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Internal server error"});
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -48,6 +55,17 @@ exports.deleteArticle = async (req, res) => {
   try {
     await deleteArticle(req.params.id);
     res.status(200).json({ message: "Article deleted successfully" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.getArticlesByName = async (req, res) => {
+  try {
+    const articles = await searchArticles(req.params.name);
+    console.log(articles);
+    res.status(200).json(articles);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Internal server error" });

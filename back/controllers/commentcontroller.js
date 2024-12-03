@@ -1,8 +1,17 @@
-const { addCommentToArticle, getComments, updateArticleComments } = require("../models/Comment");
+const {
+  addCommentToArticle,
+  getComments,
+  searchComments,
+  updateArticleComments
+} = require("../models/Comment");
+
 
 exports.addComment = async (req, res) => {
   try {
-    const commentData = { comment: req.body.comment, user_id: req.body.user_id };
+    const commentData = {
+      comment: req.body.comment,
+      user_id: req.body.user_id,
+    };
     await addCommentToArticle(req.params.id, commentData);
     res.status(201).json({ message: "Comment added successfully" });
   } catch (e) {
@@ -45,3 +54,13 @@ exports.updateComments = async (req, res) => {
   }
 };
 
+exports.getCommentsByName = async (req, res) => {
+  try {
+    const comments = await searchComments(req.params.name);
+    console.log(comments);
+    res.status(200).json(comments);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
