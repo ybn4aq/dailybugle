@@ -10,6 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
     { src: "ads/ad6.jpg", url: "https://www.mcdonalds.com/us/en-us/product/big-mac.html" },
   ];
 
+  const adInteractions = JSON.parse(localStorage.getItem("adInteractions")) || //persistent storage of interactions
+  ads.reduce((acc, ad) => {
+    acc[ad.src] = 0; 
+    return acc;
+  }, {});
+
   const adImpressions = JSON.parse(localStorage.getItem("adImpressions")) || //persistent storage of impressions
   ads.reduce((acc, ad) => {
     acc[ad.src] = 0; 
@@ -17,27 +23,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }, {});
 
   const adImage = document.getElementById("ad-image");
+  const interactionCountElement = document.getElementById("interaction-count");
   const impressionCountElement = document.getElementById("impression-count");
 
   let currentAdUrl = ""; 
+  function saveInteractions() {
+    localStorage.setItem("adInteractions", JSON.stringify(adInteractions));
+  }
   function saveImpressions() {
     localStorage.setItem("adImpressions", JSON.stringify(adImpressions));
   }
-
+  
   function displayRandomAd() {
+    console.log("displaying random ad");
     if (!adImage) return;
 
     const randomIndex = Math.floor(Math.random() * ads.length);
     const selectedAd = ads[randomIndex];
 
-    adImage.src = selectedAd.src; 
-    adImage.alt = `Advertisement for ${selectedAd.url}`; 
-    currentAdUrl = selectedAd.url; 
-    if (impressionCountElement) {
-      impressionCountElement.textContent = adImpressions[selectedAd.src];
+    adImage.src = selectedAd.src;
+    adImage.alt = `Advertisement for ${selectedAd.url}`;
+    currentAdUrl = selectedAd.url;
+
+    if (selectedAd && adImpressions[selectedAd.src] !== undefined) {
+        adImpressions[selectedAd.src] += 1; // Increment impressions
+        saveImpressions(); // Save impressions to localStorage
+
+        if (impressionCountElement) {
+            impressionCountElement.textContent = adImpressions[selectedAd.src];
+        }
     }
+
+    if (interactionCountElement) {
+        interactionCountElement.textContent = adInteractions[selectedAd.src];
+    }
+
     console.log(`Displaying ad: ${selectedAd.src}`);
-  }
+}
 
   function handleAdClick() {
     if (!adImage || !adImage.src) return;
@@ -45,19 +67,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const currentAd = adImage.src.split("/").pop();
     const adPath = ads.find((ad) => ad.src.includes(currentAd));
 
-    if (adPath && adImpressions[adPath.src] !== undefined) {
-      adImpressions[adPath.src] += 1;
-      saveImpressions();
-      if (impressionCountElement) {
-        impressionCountElement.textContent = adImpressions[adPath.src];
+    if (adPath && adInteractions[adPath.src] !== undefined) {
+      adInteractions[adPath.src] += 1;
+      saveInteractions();
+      if (interactionCountElement) {
+        interactionCountElement.textContent = adInteractions[adPath.src];
       }
 
-      console.log(`Ad "${adPath.src}" clicked. Total impressions: ${adImpressions[adPath.src]}`);
+      console.log(`Ad "${adPath.src}" clicked. Total interactions: ${adInteractions[adPath.src]}`);
       if (currentAdUrl) {
         window.location.href = currentAdUrl;
       }
     } else {
-      console.warn(`Ad path "${currentAd}" not found in impressions tracking.`);
+      console.warn(`Ad path "${currentAd}" not found in interactions tracking.`);
     }
   }
   if (adImage) {
@@ -174,14 +196,14 @@ function handleViewRole(role) {
     document.getElementById("ad-container").innerHTML = "";
     document.getElementById("ad-container").style.border = "0px";
     document.getElementById("ad-container").style.height = 0;
-    document.getElementById("impression-container").innerHTML = "";
+    document.getElementById("interaction-container").innerHTML = "";
     showSearchBox();
     fetchArticles(role);
   } else if (role === "editor") {
     document.getElementById("ad-container").innerHTML = "";
     document.getElementById("ad-container").style.border = "0px";
     document.getElementById("ad-container").style.height = 0;
-    document.getElementById("impression-container").innerHTML = "";
+    document.getElementById("interaction-container").innerHTML = "";
     showSearchBox();
 
     fetchArticles(role);
